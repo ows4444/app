@@ -36,6 +36,16 @@ export default defineConfig([
         // Config
         { type: "config", pattern: "src/config/**" },
 
+        // Shared lib (specific folders first, catch-all last)
+        { type: "shared-infra", pattern: "src/shared/lib/infra/**" },
+        { type: "shared-utils", pattern: "src/shared/lib/utils/**" },
+        { type: "shared-types", pattern: "src/shared/lib/types/**" },
+        { type: "shared-lib", pattern: "src/shared/lib/**" },
+
+        // Shared (non-lib)
+        { type: "shared-utils", pattern: "src/shared/utils/**" },
+        { type: "shared-types", pattern: "src/shared/types/**" },
+
         {
           type: "feature",
           pattern: "src/features/*",
@@ -73,11 +83,6 @@ export default defineConfig([
           capture: ["feature"],
         },
 
-        // Shared
-        { type: "shared-lib", pattern: "src/shared/lib/**" },
-        { type: "shared-utils", pattern: "src/shared/utils/**" },
-        { type: "shared-types", pattern: "src/shared/types/**" },
-
         // Infra layers
         { type: "providers", pattern: "src/providers/**" },
         { type: "state", pattern: "src/state/**" },
@@ -106,9 +111,10 @@ export default defineConfig([
                 { to: { type: "feature-ui" } },
                 { to: { type: "feature-hooks" } },
                 { to: { type: "feature-server" } },
-                { to: { type: "shared-lib" } },
+                { to: { type: "shared-infra" } },
                 { to: { type: "shared-utils" } },
                 { to: { type: "providers" } },
+                { to: { type: "shared-lib" } },
                 { to: { type: "state" } },
               ],
             },
@@ -119,8 +125,9 @@ export default defineConfig([
             {
               from: { type: "feature" },
               allow: [
-                { to: { type: "shared-lib" } },
+                { to: { type: "shared-infra" } },
                 { to: { type: "shared-utils" } },
+                { to: { type: "shared-lib" } },
                 { to: { type: "state" } },
               ],
             },
@@ -146,9 +153,11 @@ export default defineConfig([
                 { to: { type: "feature" } },
                 { to: { type: "feature-hooks" } },
                 { to: { type: "feature-query" } },
-                { to: { type: "shared-lib" } },
+                { to: { type: "shared-infra" } },
                 { to: { type: "shared-utils" } },
+                { to: { type: "shared-lib" } },
               ],
+              disallow: [{ to: { type: "feature-api" } }],
             },
 
             /**
@@ -159,8 +168,9 @@ export default defineConfig([
               allow: [
                 { to: { type: "feature" } },
                 { to: { type: "feature-query" } },
-                { to: { type: "shared-lib" } },
+                { to: { type: "shared-infra" } },
                 { to: { type: "shared-utils" } },
+                { to: { type: "shared-lib" } },
               ],
             },
 
@@ -173,8 +183,9 @@ export default defineConfig([
                 { to: { type: "feature" } },
                 { to: { type: "feature-api" } },
                 { to: { type: "feature-mapper" } },
-                { to: { type: "shared-lib" } },
+                { to: { type: "shared-infra" } },
                 { to: { type: "shared-utils" } },
+                { to: { type: "shared-lib" } },
               ],
             },
 
@@ -185,8 +196,9 @@ export default defineConfig([
               from: { type: "feature-api" },
               allow: [
                 { to: { type: "feature" } },
-                { to: { type: "shared-lib" } },
+                { to: { type: "shared-infra" } },
                 { to: { type: "shared-utils" } },
+                { to: { type: "shared-lib" } },
               ],
             },
 
@@ -198,6 +210,7 @@ export default defineConfig([
               allow: [
                 { to: { type: "feature" } },
                 { to: { type: "shared-utils" } },
+                { to: { type: "shared-lib" } },
               ],
             },
 
@@ -210,8 +223,9 @@ export default defineConfig([
                 { to: { type: "feature" } },
                 { to: { type: "feature-mapper" } },
                 { to: { type: "config" } },
-                { to: { type: "shared-lib" } },
+                { to: { type: "shared-infra" } },
                 { to: { type: "shared-utils" } },
+                { to: { type: "shared-lib" } },
               ],
             },
 
@@ -219,7 +233,7 @@ export default defineConfig([
              * SHARED LIB
              */
             {
-              from: { type: "shared-lib" },
+              from: { type: "shared-infra" },
               allow: [{ to: { type: "shared-utils" } }],
             },
 
@@ -239,8 +253,9 @@ export default defineConfig([
               allow: [
                 { to: { type: "feature" } },
                 { to: { type: "feature-hooks" } },
-                { to: { type: "shared-lib" } },
+                { to: { type: "shared-infra" } },
                 { to: { type: "shared-utils" } },
+                { to: { type: "shared-lib" } },
                 { to: { type: "state" } },
               ],
             },
@@ -251,37 +266,65 @@ export default defineConfig([
             {
               from: { type: "state" },
               allow: [
-                { to: { type: "shared-lib" } },
+                { to: { type: "shared-infra" } },
                 { to: { type: "shared-utils" } },
+                { to: { type: "shared-lib" } },
               ],
             },
 
             {
               from: { type: "config" },
               allow: [
-                { to: { type: "shared-lib" } },
+                { to: { type: "shared-infra" } },
                 { to: { type: "shared-utils" } },
+                { to: { type: "shared-lib" } },
               ],
             },
             {
               from: { type: "proxy" },
               allow: [
                 { to: { type: "config" } },
-                { to: { type: "shared-lib" } },
+                { to: { type: "shared-infra" } },
                 { to: { type: "shared-utils" } },
+                { to: { type: "shared-lib" } },
               ],
             },
             {
               from: { type: "scripts" },
               allow: [
-                { to: { type: "shared-lib" } },
+                { to: { type: "shared-infra" } },
                 { to: { type: "shared-utils" } },
                 { to: { type: "config" } },
+                { to: { type: "shared-lib" } },
               ],
             },
             {
               from: { type: "shared-types" },
               allow: [],
+            },
+            {
+              from: { type: "shared-lib" },
+              allow: [
+                { to: { type: "shared-lib" } },
+                { to: { type: "shared-infra" } },
+                { to: { type: "shared-utils" } },
+                { to: { type: "shared-types" } },
+              ],
+            },
+            {
+              from: { type: "shared-infra" },
+              allow: [
+                { to: { type: "shared-infra" } },
+                { to: { type: "shared-utils" } },
+                { to: { type: "shared-lib" } },
+              ],
+            },
+            {
+              from: { type: "shared-utils" },
+              allow: [
+                { to: { type: "shared-utils" } },
+                { to: { type: "shared-lib" } },
+              ],
             },
           ],
         },

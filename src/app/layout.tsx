@@ -4,8 +4,8 @@ import "./globals.css";
 import { Providers } from "./providers";
 import { getSession } from "@/features/auth/server/get-session";
 import { AUTH_QUERY_KEYS } from "@/features/auth/constants";
-import { getDehydratedState } from "@/shared/lib/react-query/hydrate";
 import { HydrationBoundary } from "@tanstack/react-query";
+import { getDehydratedState } from "@/shared/lib/infra/react-query/hydrate";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
