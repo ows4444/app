@@ -20,13 +20,18 @@ export async function proxy(req: NextRequest) {
     headers.delete("connection");
     headers.delete("content-length");
 
-    return fetch(target, {
+    const init: RequestInit & { duplex?: "half" } = {
       method: req.method,
       headers,
       body:
         req.method === "GET" || req.method === "HEAD" ? undefined : req.body,
-      duplex: "half",
-    });
+    };
+
+    if (req.method !== "GET" && req.method !== "HEAD") {
+      init.duplex = "half";
+    }
+
+    return fetch(target, init);
   } catch {
     return new Response("Upstream error", { status: 502 });
   }
