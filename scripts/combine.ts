@@ -11,7 +11,7 @@ const INCLUDE_EXTENSIONS = new Set([
   ".json",
   ".gitkeep",
   ".css",
-  ".mjs", 
+  ".mjs",
   ".md",
   ".nvmrc",
   ".mjs",
@@ -19,12 +19,10 @@ const INCLUDE_EXTENSIONS = new Set([
 ]);
 
 const IGNORE_NAMES = new Set([
- 
   "scripts",
 
   ".next",
   "README.md",
- 
 
   "dist",
   "build",

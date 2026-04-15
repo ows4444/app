@@ -10,12 +10,12 @@ export function log(message: string, context?: Record<string, unknown>) {
 }
 
 export function error(message: string, context?: Record<string, unknown>) {
- console.error(
-   JSON.stringify({
-     level: "error",
-     message,
-     ...context,
-     ts: new Date().toISOString(),
-   }),
- );
+  console.error(
+    JSON.stringify({
+      level: "error",
+      message,
+      ...context,
+      ts: new Date().toISOString(),
+    }),
+  );
 }
