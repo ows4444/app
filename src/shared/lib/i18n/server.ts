@@ -1,6 +1,7 @@
-import { defaultLocale, Locale, locales } from "./config";
-import { getMessageLoaders } from "./registry";
 import { cookies, headers } from "next/headers";
+
+import { defaultLocale, type Locale, locales } from "./config";
+import { getMessageLoaders } from "./registry";
 
 const globalLoaders = {
   en: () => import("./messages/en.json").then((m) => m.default),
@@ -17,6 +18,7 @@ export async function getMessages(locale: Locale) {
   const entries = await Promise.all(
     Object.entries(loaders).map(async ([key, loader]) => {
       const data = (await loader(locale)) ?? {};
+
       return [key, data];
     }),
   );
@@ -29,6 +31,7 @@ export async function getMessages(locale: Locale) {
 
 export async function resolveLocale(): Promise<Locale> {
   const cookieStore = await cookies();
+
   const headerStore = await headers();
 
   const cookieLocale = cookieStore.get("locale")?.value as Locale | undefined;

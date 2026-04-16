@@ -1,4 +1,4 @@
-import type { Theme } from "./theme.types";
+import { type Theme } from "./theme.types";
 
 export function applyThemeToDOM(theme: Theme) {
   if (typeof document === "undefined") return;

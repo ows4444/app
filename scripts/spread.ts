@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 
 const ROOT_DIR = process.cwd();
+
 const OUTPUT_PREFIX = "combine-part";
 
 /**
@@ -34,10 +35,12 @@ for (const file of inputFiles) {
   const md = fs.readFileSync(file, "utf8");
 
   let match: RegExpExecArray | null;
+
   BLOCK_REGEX.lastIndex = 0;
 
   while ((match = BLOCK_REGEX.exec(md)) !== null) {
     const relativePath = match[1].trim();
+
     const body = match[2].trim();
 
     if (!body) continue;

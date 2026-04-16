@@ -1,9 +1,10 @@
 "use client";
 
 import { createContext, useContext, useEffect, useLayoutEffect, useMemo, useState } from "react";
+
 import { applyThemeToDOM, getSystemTheme } from "@/shared/lib/theme/theme.dom";
 import { getStoredTheme, setStoredTheme } from "@/shared/lib/theme/theme.storage";
-import type { Theme, ThemeContextValue } from "@/shared/lib/theme/theme.types";
+import { type Theme, type ThemeContextValue } from "@/shared/lib/theme/theme.types";
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
@@ -46,6 +47,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
 export function useTheme() {
   const ctx = useContext(ThemeContext);
+
   if (!ctx) throw new Error("useTheme must be used within ThemeProvider");
+
   return ctx;
 }

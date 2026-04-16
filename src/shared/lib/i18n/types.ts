@@ -1,4 +1,4 @@
-import global from "./messages/en.json";
+import type global from "./messages/en.json";
 
 export interface MessageNamespaces {
   common: typeof global.common;

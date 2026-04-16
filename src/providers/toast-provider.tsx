@@ -1,7 +1,8 @@
 "use client";
 
-import { Toaster } from "react-hot-toast";
 import { useMemo, useSyncExternalStore } from "react";
+import { Toaster } from "react-hot-toast";
+
 import { useTheme } from "@/providers/theme-provider";
 import { getToastOptions } from "@/shared/lib/toast/toast.config";
 

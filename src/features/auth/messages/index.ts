@@ -7,5 +7,6 @@ const loaders = {
 
 registerMessages("auth", async (locale) => {
   const load = loaders[locale as keyof typeof loaders] ?? loaders.en;
+
   return load();
 });

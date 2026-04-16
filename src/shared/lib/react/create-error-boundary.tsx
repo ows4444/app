@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+
 import { normalizeError } from "@/shared/lib/errors/normalize";
 
 type Options = {
@@ -33,7 +34,9 @@ export function createErrorBoundary({ name, fallback }: Options) {
       this.setState({ hasError: true, error: normalized, rawError: error });
     }
 
-    reset = () => this.setState({ hasError: false, error: null, rawError: null });
+    reset = () => {
+      this.setState({ hasError: false, error: null, rawError: null });
+    };
 
     render() {
       if (this.state.hasError) {

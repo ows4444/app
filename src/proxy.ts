@@ -1,8 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server";
+
 import { env } from "@/config/env";
-import { locales, defaultLocale, Locale } from "@/shared/lib/i18n/config";
-import { withContext } from "@/shared/lib/infra/logger/with-context";
 import { normalizeError } from "@/shared/lib/errors/normalize";
+import { defaultLocale, type Locale, locales } from "@/shared/lib/i18n/config";
+import { withContext } from "@/shared/lib/infra/logger/with-context";
 
 const API_URL = (() => {
   try {
@@ -14,6 +15,7 @@ const API_URL = (() => {
 
 function resolveLocale(req: NextRequest) {
   const cookieLocale = req.cookies.get("locale")?.value as Locale | undefined;
+
   if (cookieLocale && locales.includes(cookieLocale)) {
     return cookieLocale;
   }
@@ -27,7 +29,9 @@ function resolveLocale(req: NextRequest) {
 
 export async function proxy(req: NextRequest) {
   const traceId = req.headers.get("x-request-id") ?? crypto.randomUUID();
+
   const log = withContext({ traceId, path: req.nextUrl.pathname });
+
   const { pathname, search } = req.nextUrl;
 
   const locale = resolveLocale(req);
@@ -44,10 +48,13 @@ export async function proxy(req: NextRequest) {
     const target = new URL(pathname.replace(/^\/api/, "") + search, API_URL);
 
     const start = Date.now();
+
     try {
       log.info("Incoming request");
       const headers = new Headers(req.headers);
+
       const cookie = req.headers.get("cookie");
+
       if (cookie) headers.set("cookie", cookie);
 
       headers.set("accept-language", locale);
@@ -60,6 +67,7 @@ export async function proxy(req: NextRequest) {
         headers,
         body: req.method === "GET" || req.method === "HEAD" ? undefined : req.body,
       };
+
       if (req.method !== "GET" && req.method !== "HEAD") {
         init.duplex = "half";
       }
@@ -71,6 +79,7 @@ export async function proxy(req: NextRequest) {
       });
 
       const resHeaders = new Headers(proxyRes.headers);
+
       resHeaders.delete("content-encoding");
       resHeaders.delete("transfer-encoding");
       resHeaders.delete("connection");
@@ -98,6 +107,7 @@ export async function proxy(req: NextRequest) {
 
   return response;
 }
+
 export const config = {
   matcher: ["/:path*"],
 };

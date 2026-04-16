@@ -32,6 +32,7 @@ export async function retryWithBackoff<T>(fn: () => Promise<T>, options: RetryOp
   } = options;
 
   const start = Date.now();
+
   let attempt = 0;
 
   while (true) {

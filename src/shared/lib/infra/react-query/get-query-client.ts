@@ -18,7 +18,9 @@ export function createQueryClient() {
           }
 
           const err = error as RetryError;
+
           if (err?.status === 401) return false;
+
           return failureCount < 2;
         },
 

@@ -1,5 +1,6 @@
 import { apiClient } from "@/shared/lib/api-client";
-import type { UserDTO } from "../types";
+
+import { type UserDTO } from "../types";
 
 export const authApi = {
   login: (data: { email: string; password: string }) =>

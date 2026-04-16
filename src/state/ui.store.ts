@@ -10,6 +10,10 @@ type UIState = {
 export const useUIStore = create<UIState>((set) => ({
   isSidebarOpen: false,
   isGlobalLoading: false,
-  toggleSidebar: () => set((s) => ({ isSidebarOpen: !s.isSidebarOpen })),
-  setLoading: (value) => set({ isGlobalLoading: value }),
+  toggleSidebar: () => {
+    set((s) => ({ isSidebarOpen: !s.isSidebarOpen }));
+  },
+  setLoading: (value) => {
+    set({ isGlobalLoading: value });
+  },
 }));

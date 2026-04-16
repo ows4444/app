@@ -1,4 +1,4 @@
-import type { DefaultToastOptions } from "react-hot-toast";
+import { type DefaultToastOptions } from "react-hot-toast";
 
 export function getToastOptions(theme: "light" | "dark"): DefaultToastOptions {
   const isDark = theme === "dark";

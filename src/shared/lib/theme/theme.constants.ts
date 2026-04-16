@@ -1,4 +1,4 @@
-import type { Theme } from "./theme.types";
+import { type Theme } from "./theme.types";
 
 export const THEME_STORAGE_KEY = "theme";
 

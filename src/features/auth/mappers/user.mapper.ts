@@ -1,4 +1,4 @@
-import type { User, UserDTO } from "../types";
+import { type User, type UserDTO } from "../types";
 
 export function mapUser(dto: UserDTO): User {
   return {

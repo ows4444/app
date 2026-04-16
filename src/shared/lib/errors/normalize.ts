@@ -18,6 +18,7 @@ type ErrorWithMeta = Error & {
 export function normalizeError(err: unknown): NormalizedError {
   if (err instanceof Error) {
     const e = err as ErrorWithMeta;
+
     return {
       message: err.message,
       name: err.name,

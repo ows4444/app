@@ -1,14 +1,15 @@
 import "./globals.css";
 import "@/app/i18n-init";
 
-import { resolveLocale, getMessages } from "@/shared/lib/i18n/server";
-import { Providers } from "@/app/providers";
 import { HydrationBoundary } from "@tanstack/react-query";
-import { getDehydratedState } from "@/shared/lib/infra/react-query/hydrate";
+import { type Metadata } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
+
+import { Providers } from "@/app/providers";
 import { AUTH_QUERY_KEYS } from "@/features/auth/constants";
 import { getSession } from "@/features/auth/server/get-session";
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { resolveLocale, getMessages } from "@/shared/lib/i18n/server";
+import { getDehydratedState } from "@/shared/lib/infra/react-query/hydrate";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,6 +28,7 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const locale = await resolveLocale();
+
   const messages = await getMessages(locale);
 
   const dehydratedState = await getDehydratedState([...AUTH_QUERY_KEYS.ME, locale], () => getSession(locale));

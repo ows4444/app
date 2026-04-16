@@ -2,7 +2,10 @@ import { HttpError } from "./errors";
 
 export async function serverFetch<T>(url: string, options?: RequestInit): Promise<T> {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 8000);
+
+  const timeout = setTimeout(() => {
+    controller.abort();
+  }, 8000);
 
   try {
     const res = await fetch(url, {
@@ -14,10 +17,12 @@ export async function serverFetch<T>(url: string, options?: RequestInit): Promis
 
     if (!res.ok) {
       const text = await res.text();
+
       throw new HttpError(res.status, text || "HTTP_ERROR");
     }
 
     const contentType = res.headers.get("content-type") ?? "";
+
     const text = await res.text();
 
     if (!text) return undefined as T;

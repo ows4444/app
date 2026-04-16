@@ -1,4 +1,5 @@
 import { TimeoutError } from "@/shared/lib/errors";
+
 import { sleep } from "./sleep";
 
 export async function retry<T>(fn: () => Promise<T>, retries = 2, delay = 200): Promise<T> {
@@ -14,6 +15,7 @@ export async function retry<T>(fn: () => Promise<T>, retries = 2, delay = 200): 
     }
 
     await sleep(delay);
+
     return retry(fn, retries - 1, delay * 2);
   }
 }

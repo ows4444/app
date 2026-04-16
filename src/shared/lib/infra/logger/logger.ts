@@ -29,6 +29,7 @@ function baseLog(level: LogLevel, message: string, context?: LogContext) {
 
   if (level === "error") console.error(output);
   else if (level === "warn") console.warn(output);
+  // eslint-disable-next-line no-console
   else console.log(output);
 }
 
