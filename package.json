@@ -10,7 +10,8 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
-    "combine": "tsx scripts/combine.ts"
+    "combine": "tsx scripts/combine.ts",
+    "prepare": "husky"
   },
   "dependencies": {
     "@t3-oss/env-core": "^0.13.11",
@@ -35,6 +36,8 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-import-resolver-typescript": "^4.4.4",
     "eslint-plugin-boundaries": "^6.0.2",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
     "postcss": "^8.5.10",
     "prettier": "^3.8.3",
     "tailwindcss": "^4.2.2",
