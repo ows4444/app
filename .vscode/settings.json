@@ -14,8 +14,13 @@
   "files.eol": "\n",
   "files.trimTrailingWhitespace": true,
   "files.insertFinalNewline": true,
+  "prettier.requireConfig": true,
   "editor.tabSize": 2,
   "editor.rulers": [120],
+  "breadcrumbs.enabled": true,
+  "editor.inlayHints.enabled": "on",
+  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
+  "eslint.useFlatConfig": true,
   "tailwindCSS.experimental.classRegex": [
     ["clsx\\(([^)]*)\\)", "(?:'|\"|`)([^'\"`]*)"],
     ["cn\\(([^)]*)\\)", "(?:'|\"|`)([^'\"`]*)"]
