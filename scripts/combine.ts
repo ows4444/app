@@ -86,11 +86,8 @@ for (const file of files) {
 
   const sectionChars = section.length;
 
-  // Skip extremely large single files
   if (sectionChars > MAX_CHARS) {
-    console.warn(
-      `⚠ skipped ${rel} (${sectionChars} chars exceeds ${MAX_CHARS})`,
-    );
+    console.warn(`⚠ skipped ${rel} (${sectionChars} chars exceeds ${MAX_CHARS})`);
     continue;
   }
 

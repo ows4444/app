@@ -1,0 +1,25 @@
+"use client";
+
+import { Toaster } from "react-hot-toast";
+import { useMemo, useSyncExternalStore } from "react";
+import { useTheme } from "@/providers/theme-provider";
+import { getToastOptions } from "@/shared/lib/toast/toast.config";
+
+export function ToastProvider({ children }: { children: React.ReactNode }) {
+  const { theme } = useTheme();
+
+  const options = useMemo(() => getToastOptions(theme), [theme]);
+
+  const mounted = useSyncExternalStore(
+    () => () => {}, // no-op subscribe
+    () => true, // client snapshot
+    () => false, // server snapshot
+  );
+
+  return (
+    <>
+      {mounted && <Toaster position="top-right" gutter={8} containerStyle={{ zIndex: 9999 }} toastOptions={options} />}
+      {children}
+    </>
+  );
+}

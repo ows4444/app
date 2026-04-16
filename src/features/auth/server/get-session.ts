@@ -1,18 +1,34 @@
-import { cookies } from "next/headers";
+import { env } from "@/config/env";
 import { serverFetch } from "@/shared/lib/fetch.server";
-import { mapUser } from "../mappers/user.mapper";
+import { cookies } from "next/headers";
 import type { UserDTO } from "../types";
+import { mapUser } from "../mappers/user.mapper";
 
-export async function getSession() {
+import { getRequestContext } from "@/shared/lib/request-context";
+import { withContext } from "@/shared/lib/infra/logger/with-context";
+import { normalizeError } from "@/shared/lib/errors/normalize-error";
+
+export async function getSession(locale?: string) {
+  const ctx = await getRequestContext();
+  const log = withContext(ctx);
+
   try {
-    const dto = await serverFetch<UserDTO>("/auth/me", {
+    log.info("Fetching session");
+
+    const cookieStore = await cookies();
+
+    const dto = await serverFetch<UserDTO>(new URL("/auth/me", env.API_URL).toString(), {
       headers: {
-        Cookie: cookies().toString(),
+        Cookie: cookieStore.toString(),
+        ...(locale ? { "Accept-Language": locale } : {}),
       },
     });
 
+    log.info("Session fetched", { userId: dto.id });
+
     return mapUser(dto);
-  } catch {
+  } catch (err) {
+    log.error("Session fetch failed", { error: normalizeError(err) });
     return null;
   }
 }

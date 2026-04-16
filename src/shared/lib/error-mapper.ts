@@ -1,10 +1,17 @@
-import { ApiError } from "./errors";
+import { AppError, HttpError, NetworkError, TimeoutError, SessionExpiredError, UnauthorizedError } from "./errors";
 
-export function mapError(error: unknown) {
-  if (error instanceof ApiError) {
-    if (error.status === 401) return "Unauthorized";
-    if (error.status === 500) return "Server error";
+export function mapToDomainError(err: unknown): AppError {
+  if (err instanceof AppError) return err;
+
+  if (err instanceof HttpError) {
+    if (err.status === 401) return new SessionExpiredError();
+    if (err.status === 403) return new UnauthorizedError();
+    return err;
   }
 
-  return "Something went wrong";
+  if (err instanceof DOMException && err.name === "AbortError") {
+    return new TimeoutError();
+  }
+
+  return new NetworkError();
 }
