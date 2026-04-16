@@ -1,10 +1,12 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { createContext, useContext, useEffect } from "react";
 
 import { useAuth } from "@/features/auth";
 import { SessionExpiredError } from "@/shared/lib/errors";
+
+const PUBLIC_ROUTES = ["/login", "/register"];
 
 type AuthContextType = ReturnType<typeof useAuth>;
 
@@ -20,11 +22,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const router = useRouter();
 
+  const pathname = usePathname();
+
   useEffect(() => {
+    if (PUBLIC_ROUTES.includes(pathname)) return;
+
     if (auth.error instanceof SessionExpiredError) {
       router.replace("/login");
     }
-  }, [auth.error, router]);
+  }, [auth.error, pathname, router]);
 
   return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
 }

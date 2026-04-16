@@ -5,6 +5,8 @@ export class AppError extends Error {
     public readonly meta?: Record<string, unknown>,
   ) {
     super(message);
+    this.name = new.target.name;
+    Object.setPrototypeOf(this, new.target.prototype);
   }
 }
 
@@ -38,5 +40,11 @@ export class SessionExpiredError extends AppError {
 export class UnauthorizedError extends AppError {
   constructor() {
     super("Unauthorized", "UNAUTHORIZED");
+  }
+}
+
+export class ValidationError extends AppError {
+  constructor(message = "Validation failed", meta?: Record<string, unknown>) {
+    super(message, "VALIDATION_ERROR", meta);
   }
 }

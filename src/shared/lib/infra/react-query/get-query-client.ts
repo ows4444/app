@@ -10,7 +10,7 @@ export function createQueryClient() {
       queries: {
         staleTime: 60_000,
         gcTime: 10 * 60_000,
-        networkMode: "always",
+        networkMode: "online",
 
         retry: (failureCount, error: unknown) => {
           if (typeof navigator !== "undefined" && !navigator.onLine) {
@@ -28,7 +28,7 @@ export function createQueryClient() {
         refetchOnReconnect: true,
       },
       mutations: {
-        networkMode: "always",
+        networkMode: "online",
       },
     },
     queryCache: new QueryCache({}),

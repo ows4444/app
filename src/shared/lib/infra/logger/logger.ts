@@ -13,11 +13,21 @@ type LogEntry = {
 
 const isProd = process.env.NODE_ENV === "production";
 
+const LOG_LEVEL = process.env.LOG_LEVEL ?? "info";
+
+const levels = ["debug", "info", "warn", "error"];
+
+function shouldLog(level: LogLevel) {
+  return levels.indexOf(level) >= levels.indexOf(LOG_LEVEL as LogLevel);
+}
+
 function serialize(entry: LogEntry) {
   return JSON.stringify(entry);
 }
 
 function baseLog(level: LogLevel, message: string, context?: LogContext) {
+  if (!shouldLog(level)) return;
+
   const entry: LogEntry = {
     level,
     message,

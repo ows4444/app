@@ -60,7 +60,9 @@ export async function apiClient<T>(path: string, options?: ApiOptions): Promise<
       shouldRetry: (err) => {
         if (method !== "GET" && method !== "HEAD") return false;
 
-        if (err instanceof HttpError) return err.status >= 500;
+        if (err instanceof HttpError) {
+          return err.status >= 500 || err.status === 429;
+        }
 
         if (err instanceof TimeoutError) return true;
 

@@ -61,6 +61,7 @@ export async function proxy(req: NextRequest) {
       headers.delete("host");
       headers.delete("connection");
       headers.delete("content-length");
+      headers.delete("accept-encoding");
       headers.set("x-forwarded-proto", req.nextUrl.protocol);
       const init: RequestInit & { duplex?: "half" } = {
         method: req.method,

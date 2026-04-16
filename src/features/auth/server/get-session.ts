@@ -21,7 +21,10 @@ export async function getSession(locale?: string) {
 
     const dto = await serverFetch<UserDTO>(new URL("/auth/me", env.API_URL).toString(), {
       headers: {
-        Cookie: cookieStore.toString(),
+        Cookie: cookieStore
+          .getAll()
+          .map((c) => `${c.name}=${c.value}`)
+          .join("; "),
         ...(locale != null ? { "Accept-Language": locale } : {}),
       },
     });
