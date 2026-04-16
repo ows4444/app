@@ -106,11 +106,6 @@ export default defineConfig([
 
       // Idiomatic nullish patterns
       "@typescript-eslint/prefer-optional-chain": "error",
-      "@typescript-eslint/prefer-nullish-coalescing": [
-        "warn",
-        // Allow || when the left side is not nullable (e.g. "" || "default")
-        { ignorePrimitives: { string: true, number: true, boolean: true } },
-      ],
     },
   },
 
@@ -498,11 +493,7 @@ export default defineConfig([
             // shared-utils (pure FP helpers, string/number/array utils)
             {
               from: { type: "shared-utils" },
-              allow: [
-                { to: { type: "shared-lib" } },
-                { to: { type: "shared-utils" } },
-                { to: { type: "shared-types" } },
-              ],
+              allow: [{ to: { type: "shared-utils" } }, { to: { type: "shared-types" } }],
             },
 
             // shared-ui (design system / Radix wrappers)

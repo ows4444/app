@@ -1,5 +1,3 @@
-import { TimeoutError } from "@/shared/lib/errors";
-
 import { sleep } from "./sleep";
 
 export async function retry<T>(fn: () => Promise<T>, retries = 2, delay = 200): Promise<T> {
@@ -7,10 +5,6 @@ export async function retry<T>(fn: () => Promise<T>, retries = 2, delay = 200): 
     return await fn();
   } catch (err) {
     if (retries <= 0) {
-      if (err instanceof DOMException && err.name === "AbortError") {
-        throw new TimeoutError();
-      }
-
       throw err;
     }
 

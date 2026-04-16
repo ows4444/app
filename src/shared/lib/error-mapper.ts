@@ -1,8 +1,6 @@
-import { AppError, HttpError, NetworkError, TimeoutError, SessionExpiredError, UnauthorizedError } from "./errors";
+import { AppError, HttpError, NetworkError, SessionExpiredError, TimeoutError, UnauthorizedError } from "./errors";
 
 export function mapToDomainError(err: unknown): AppError {
-  if (err instanceof AppError) return err;
-
   if (err instanceof HttpError) {
     if (err.status === 401) return new SessionExpiredError();
 
@@ -10,6 +8,8 @@ export function mapToDomainError(err: unknown): AppError {
 
     return err;
   }
+
+  if (err instanceof AppError) return err;
 
   if (err instanceof DOMException && err.name === "AbortError") {
     return new TimeoutError();
