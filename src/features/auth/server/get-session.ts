@@ -3,10 +3,9 @@ import { serverFetch } from "@/shared/lib/fetch.server";
 import { cookies } from "next/headers";
 import type { UserDTO } from "../types";
 import { mapUser } from "../mappers/user.mapper";
-
 import { getRequestContext } from "@/shared/lib/request-context";
 import { withContext } from "@/shared/lib/infra/logger/with-context";
-import { normalizeError } from "@/shared/lib/errors/normalize-error";
+import { normalizeError } from "@/shared/lib/errors/normalize";
 
 export async function getSession(locale?: string) {
   const ctx = await getRequestContext();

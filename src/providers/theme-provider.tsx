@@ -14,7 +14,6 @@ function resolveInitialTheme(): Theme {
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(() => resolveInitialTheme());
 
- 
   useLayoutEffect(() => {
     applyThemeToDOM(theme);
     // eslint-disable-next-line react-hooks/exhaustive-deps

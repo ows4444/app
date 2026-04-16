@@ -1,8 +1,8 @@
-import fs from 'fs';
-import path from 'path';
+import fs from "fs";
+import path from "path";
 
 const ROOT_DIR = process.cwd();
-const OUTPUT_PREFIX = 'combine-part';
+const OUTPUT_PREFIX = "combine-part";
 
 /**
  * Expected block format:
@@ -16,7 +16,7 @@ const BLOCK_REGEX = /##\s+([^\n]+)\n([\s\S]*?)(?=\n---|\n##\s+|$)/g;
 function getInputFiles(): string[] {
   return fs
     .readdirSync(ROOT_DIR)
-    .filter((f) => f.startsWith(OUTPUT_PREFIX) && f.endsWith('.md'))
+    .filter((f) => f.startsWith(OUTPUT_PREFIX) && f.endsWith(".md"))
     .sort()
     .map((f) => path.join(ROOT_DIR, f));
 }
@@ -24,14 +24,14 @@ function getInputFiles(): string[] {
 const inputFiles = getInputFiles();
 
 if (inputFiles.length === 0) {
-  console.error('✖ No combine-part-*.md files found');
+  console.error("✖ No combine-part-*.md files found");
   process.exit(1);
 }
 
 let written = 0;
 
 for (const file of inputFiles) {
-  const md = fs.readFileSync(file, 'utf8');
+  const md = fs.readFileSync(file, "utf8");
 
   let match: RegExpExecArray | null;
   BLOCK_REGEX.lastIndex = 0;
@@ -48,7 +48,7 @@ for (const file of inputFiles) {
       recursive: true,
     });
 
-    fs.writeFileSync(fullPath, body + '\n', 'utf8');
+    fs.writeFileSync(fullPath, body + "\n", "utf8");
 
     written++;
     console.log(`✔ wrote ${relativePath}`);
@@ -56,7 +56,7 @@ for (const file of inputFiles) {
 }
 
 if (written === 0) {
-  console.error('✖ No valid file sections found');
+  console.error("✖ No valid file sections found");
   process.exit(1);
 }
 

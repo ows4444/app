@@ -1,17 +1,18 @@
-import { HttpError, TimeoutError, NetworkError } from "./errors";
-import { mapToDomainError } from "./error-mapper";
 import { retryWithBackoff } from "@/shared/utils/async/retry-advanced";
+import { mapToDomainError } from "./error-mapper";
+import { AppError, HttpError, NetworkError, TimeoutError } from "./errors";
+
+import { err, ok, Result } from "./result";
 
 type ApiOptions = RequestInit & {
   timeout?: number;
   retry?: number;
   retryDelay?: number;
 };
-
-export async function apiClient<T>(path: string, options?: ApiOptions): Promise<T> {
+export async function apiClient<T>(path: string, options?: ApiOptions): Promise<Result<T, AppError>> {
   const method = options?.method ?? "GET";
 
-  return retryWithBackoff(
+  return retryWithBackoff<Result<T, AppError>>(
     async () => {
       const controller = new AbortController();
       const timeout = options?.timeout ?? 8000;
@@ -27,20 +28,20 @@ export async function apiClient<T>(path: string, options?: ApiOptions): Promise<
 
         if (!res.ok) {
           const text = await res.text();
-          throw new HttpError(res.status, text || "HTTP_ERROR");
+          return err(new HttpError(res.status, text || "HTTP_ERROR"));
         }
 
         const text = await res.text();
         const contentType = res.headers.get("content-type") ?? "";
 
-        if (!text) return undefined as T;
+        if (!text) return ok(undefined as T);
         if (contentType.includes("application/json")) {
-          return JSON.parse(text);
+          return ok(JSON.parse(text));
         }
 
-        return text as T;
-      } catch (err) {
-        throw mapToDomainError(err);
+        return ok(text as T);
+      } catch (error) {
+        return err(mapToDomainError(error));
       } finally {
         clearTimeout(id);
       }

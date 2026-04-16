@@ -2,13 +2,19 @@ import { useSafeQuery } from "@/shared/lib/infra/react-query/use-safe-query";
 import { authApi } from "../api/auth.api";
 import { AUTH_QUERY_KEYS } from "../constants";
 import { mapUser } from "../mappers/user.mapper";
+import { isErr } from "@/shared/lib/result";
 
 export const useMeQuery = (locale?: string) => {
   const query = useSafeQuery({
     queryKey: [...AUTH_QUERY_KEYS.ME, locale],
     queryFn: async () => {
-      const dto = await authApi.me();
-      return mapUser(dto);
+      const res = await authApi.me();
+
+      if (isErr(res)) {
+        throw res.error;
+      }
+
+      return mapUser(res.data);
     },
     staleTime: 60_000,
     retry: false,
