@@ -1,4 +1,4 @@
-export function getRequestContext() {
+export function getClientRequestContext() {
   return {
     traceId: crypto.randomUUID(),
     locale: null,

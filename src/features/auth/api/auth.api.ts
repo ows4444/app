@@ -13,10 +13,8 @@ export const authApi = {
     path: "/auth/me",
     output: userSchema,
 
-    cache: "force-cache",
-    dedupeTTL: 5000,
+    cache: "no-store", // auth must never cache
 
     tags: ["auth"],
-    priority: "high",
   }),
 };

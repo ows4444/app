@@ -8,8 +8,15 @@ import { defaultLocale, type Locale, locales } from "@/shared/lib/i18n/config";
 import { createAbortSignal } from "@/shared/lib/infra/abort/abort";
 import { withContext } from "@/shared/lib/infra/logger/with-context.server";
 import { metrics } from "@/shared/lib/infra/metrics";
-import { getRequestContext } from "@/shared/lib/request-context/request-context.server";
-import { generateCsrfToken, getCsrfCookieName, getCsrfHeaderName, isSafeMethod } from "@/shared/lib/security/csrf";
+import { getServerRequestContext } from "@/shared/lib/request-context/request-context.server";
+import {
+  generateCsrfPair,
+  getCsrfCookieName,
+  getCsrfHeaderName,
+  getCsrfSigCookieName,
+  isSafeMethod,
+  verifyCsrf,
+} from "@/shared/lib/security/csrf.server";
 
 const API_URL = (() => {
   try {
@@ -34,7 +41,8 @@ function resolveLocale(req: NextRequest): Locale {
 }
 
 export async function proxy(req: NextRequest) {
-  const { traceId } = await getRequestContext();
+  const nonce = crypto.randomBytes(16).toString("base64");
+  const { traceId } = await getServerRequestContext();
 
   const log = withContext({
     traceId,
@@ -56,45 +64,37 @@ export async function proxy(req: NextRequest) {
   if (!pathname.startsWith("/api")) {
     response = NextResponse.next();
   } else {
-    const csrfCookieName = getCsrfCookieName();
-    const csrfHeaderName = getCsrfHeaderName();
-
     const origin = req.headers.get("origin");
     const host = req.nextUrl.origin;
 
     // ✅ STRICT origin validation (no substring matching)
-    if (origin && origin !== host) {
+    if (!isSafeMethod(req.method) && origin && origin !== host) {
       log.warn("Invalid origin", { origin, host });
 
       return new NextResponse("Forbidden - Origin mismatch", { status: 403 });
     }
 
     if (!isSafeMethod(req.method)) {
-      const csrfCookie = req.cookies.get(csrfCookieName)?.value;
-      const csrfHeader = req.headers.get(csrfHeaderName);
+      const csrfToken = req.cookies.get(getCsrfCookieName())?.value ?? "";
+      const csrfSig = req.cookies.get(getCsrfSigCookieName())?.value ?? "";
+      const csrfHeader = req.headers.get(getCsrfHeaderName()) ?? "";
 
-      // ✅ Validate presence + equal length BEFORE timingSafeEqual
-      if (!csrfCookie || !csrfHeader) {
-        log.warn("CSRF validation failed - missing token");
+      if (!csrfToken || !csrfSig || !csrfHeader) {
+        log.warn("CSRF validation failed - missing parts");
         metrics.increment("proxy.csrf_blocked");
 
         return new NextResponse("Forbidden - CSRF", { status: 403 });
       }
 
-      const cookieBuf = Buffer.from(csrfCookie);
-      const headerBuf = Buffer.from(csrfHeader);
-
-      // ⚠️ timingSafeEqual throws if buffer lengths differ
-      if (cookieBuf.length !== headerBuf.length) {
-        log.warn("CSRF validation failed - length mismatch");
-        metrics.increment("proxy.csrf_blocked");
-
-        return new NextResponse("Forbidden - CSRF", { status: 403 });
-      }
-
-      // ✅ constant-time comparison (safe now)
-      if (!crypto.timingSafeEqual(cookieBuf, headerBuf)) {
+      if (csrfToken !== csrfHeader) {
         log.warn("CSRF validation failed - token mismatch");
+        metrics.increment("proxy.csrf_blocked");
+
+        return new NextResponse("Forbidden - CSRF", { status: 403 });
+      }
+
+      if (!verifyCsrf(csrfToken, csrfSig)) {
+        log.warn("CSRF validation failed - invalid signature");
         metrics.increment("proxy.csrf_blocked");
 
         return new NextResponse("Forbidden - CSRF", { status: 403 });
@@ -116,8 +116,6 @@ export async function proxy(req: NextRequest) {
 
       const allowedHeaders = ["accept", "content-type", "authorization", "x-request-id"];
 
-      headers.set("x-request-id", traceId);
-
       const ip = req.headers.get("x-forwarded-for") ?? "unknown";
 
       headers.set("x-forwarded-for", ip);
@@ -131,6 +129,7 @@ export async function proxy(req: NextRequest) {
 
       if (cookie) headers.set("cookie", cookie);
 
+      headers.set("x-csp-nonce", nonce);
       headers.set("accept-language", locale);
       headers.set("x-request-id", traceId);
       headers.delete("host");
@@ -187,27 +186,27 @@ export async function proxy(req: NextRequest) {
         headers: resHeaders,
       });
 
-      // ✅ Always ensure CSRF token exists
-      const csrfCookieName = getCsrfCookieName();
-      let csrfToken = req.cookies.get(csrfCookieName)?.value;
+      const csrfTokenCookie = req.cookies.get(getCsrfCookieName())?.value;
+      const csrfSigCookie = req.cookies.get(getCsrfSigCookieName())?.value;
 
-      if (!csrfToken) {
-        csrfToken = generateCsrfToken();
+      if (!csrfTokenCookie || !csrfSigCookie) {
+        const { token, signature } = generateCsrfPair();
+
+        // readable token (for client → header)
+        response.cookies.set(getCsrfCookieName(), token, {
+          path: "/",
+          sameSite: "lax",
+          secure: process.env.NODE_ENV === "production",
+        });
+
+        // httpOnly signature (server-only)
+        response.cookies.set(getCsrfSigCookieName(), signature, {
+          path: "/",
+          sameSite: "lax",
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+        });
       }
-
-      // ✅ Rotate token on unsafe requests (stronger security)
-      if (!csrfToken) {
-        csrfToken = generateCsrfToken();
-      }
-
-      response.cookies.set(csrfCookieName, csrfToken, {
-        path: "/",
-        sameSite: "lax",
-        httpOnly: true,
-        secure: true,
-      });
-
-      response.headers.set(getCsrfHeaderName(), csrfToken);
 
       response.headers.set("x-frame-options", "DENY");
       response.headers.set("x-content-type-options", "nosniff");
@@ -218,14 +217,16 @@ export async function proxy(req: NextRequest) {
         "content-security-policy",
         [
           "default-src 'self'",
-          "script-src 'self'",
-          "style-src 'self' 'unsafe-inline'",
+          `script-src 'self' 'nonce-${nonce}'`,
+          `style-src 'self' 'unsafe-inline'`,
           "img-src 'self' data:",
           "font-src 'self'",
           "connect-src 'self' https:",
           "frame-ancestors 'none'",
         ].join("; "),
       );
+
+      response.headers.set("Accept-CH", "Sec-CH-Prefers-Color-Scheme");
 
       response.headers.set("cache-control", "no-store");
     } catch (err) {
@@ -245,7 +246,7 @@ export async function proxy(req: NextRequest) {
       path: "/",
       sameSite: "lax",
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === "production",
     });
   }
 

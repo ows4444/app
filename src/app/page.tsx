@@ -1,4 +1,5 @@
 "use client";
+// using `use client` TODO: remove this when we have a better solution for i18n in server components
 
 import { useT } from "@/shared/lib/i18n/client";
 

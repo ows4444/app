@@ -1,16 +1,17 @@
 import { cookies } from "next/headers";
 import { cache } from "react";
+import "server-only";
 
 import { normalizeError } from "@/shared/lib/errors/normalize";
-import { apiClient } from "@/shared/lib/infra/api-client";
+import { apiClient } from "@/shared/lib/infra/api-client/api-client.server";
 import { withContext } from "@/shared/lib/infra/logger/with-context.server";
-import { getRequestContext } from "@/shared/lib/request-context/request-context.server";
+import { getServerRequestContext } from "@/shared/lib/request-context/request-context.server";
 
 import { mapUser } from "../mappers/user.mapper";
 import { type UserDTO } from "../types";
 
 export const getSession = cache(async (locale?: string) => {
-  const ctx = await getRequestContext();
+  const ctx = await getServerRequestContext();
 
   const log = withContext({
     ...ctx,

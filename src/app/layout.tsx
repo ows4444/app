@@ -32,6 +32,7 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const log = withContext({ scope: "app:root-layout" });
+
   const locale = await resolveLocale();
 
   const initialTheme = await getServerTheme();
@@ -67,7 +68,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       className={`${initialTheme === "dark" ? "dark" : ""} ${geistSans.variable} ${geistMono.variable}`}
     >
       <body>
-        <Providers messages={messages}>
+        <Providers messages={messages} initialTheme={initialTheme}>
           <HydrationBoundary state={dehydratedState}>
             <RootErrorBoundaryProvider>{children}</RootErrorBoundaryProvider>
           </HydrationBoundary>

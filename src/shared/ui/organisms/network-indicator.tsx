@@ -1,21 +1,29 @@
 "use client";
 
-import { useNetworkStore } from "@/state/network.store";
+import { useEffect, useState } from "react";
 
 export function NetworkIndicator() {
-  const { isOnline, isSlow } = useNetworkStore();
+  const [isOnline, setIsOnline] = useState(true);
+
+  useEffect(() => {
+    const update = () => {
+      setIsOnline(navigator.onLine);
+    };
+
+    update();
+
+    window.addEventListener("online", update);
+    window.addEventListener("offline", update);
+
+    return () => {
+      window.removeEventListener("online", update);
+      window.removeEventListener("offline", update);
+    };
+  }, []);
 
   if (!isOnline) {
     return (
       <div className="fixed top-0 z-[9999] w-full bg-red-500 p-2 text-center text-white text-sm">You are offline</div>
-    );
-  }
-
-  if (isSlow) {
-    return (
-      <div className="fixed top-0 z-[9999] w-full bg-yellow-500 p-2 text-center text-black text-sm">
-        Network is slow...
-      </div>
     );
   }
 

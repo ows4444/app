@@ -9,6 +9,6 @@ export async function setLocale(locale: string) {
     path: "/",
     sameSite: "lax",
     httpOnly: true,
-    secure: true,
+    secure: process.env.NODE_ENV === "production",
   });
 }

@@ -2,25 +2,14 @@
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
-import { getCookie } from "@/shared/lib/cookies";
 import { applyThemeToDOM } from "@/shared/lib/theme/theme.dom";
 import { getStoredTheme, setStoredTheme } from "@/shared/lib/theme/theme.storage";
 import { type Theme, type ThemeContextValue } from "@/shared/lib/theme/theme.types";
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
-function resolveInitialTheme(): Theme {
-  const cookieTheme = getCookie<Theme>("theme");
-
-  return cookieTheme ?? "light";
-}
-
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>(() => {
-    if (typeof window === "undefined") return "light";
-
-    return resolveInitialTheme();
-  });
+export function ThemeProvider({ children, initialTheme }: { children: React.ReactNode; initialTheme: Theme }) {
+  const [theme, setThemeState] = useState<Theme>(initialTheme);
 
   useEffect(() => {
     setStoredTheme(theme);

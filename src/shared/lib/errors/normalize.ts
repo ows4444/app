@@ -24,7 +24,7 @@ export function normalizeError(err: unknown): NormalizedError {
       name: err.name,
 
       ...(e.cause !== undefined ? { cause: e.cause } : undefined),
-      ...(err.stack ? { stack: err.stack } : undefined),
+      // ...(err.stack ? { stack: err.stack } : undefined),
 
       ...(e.status !== undefined && { status: e.status }),
       ...(e.code !== undefined && { code: e.code }),

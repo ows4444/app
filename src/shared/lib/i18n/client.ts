@@ -48,6 +48,6 @@ export function useT() {
 }
 
 export function useLocale() {
-  const messages = useContext(I18nContext);
-  return (messages as { __locale?: string }).__locale ?? "en";
+  const messages = useContext(I18nContext) as Messages & { __locale?: string };
+  return messages?.__locale ?? "en";
 }
