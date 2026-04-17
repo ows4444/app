@@ -2,7 +2,7 @@ import { dehydrate } from "@tanstack/react-query";
 
 import { createQueryClient } from "./get-query-client";
 
-export async function getDehydratedState(key: unknown[], fn: () => Promise<unknown>) {
+export async function getDehydratedState(key: readonly unknown[], fn: () => Promise<unknown>) {
   const queryClient = createQueryClient();
 
   try {
@@ -14,5 +14,7 @@ export async function getDehydratedState(key: unknown[], fn: () => Promise<unkno
     // Ignore errors
   }
 
-  return dehydrate(queryClient);
+  return dehydrate(queryClient, {
+    shouldDehydrateQuery: (q) => q.state.status === "success",
+  });
 }

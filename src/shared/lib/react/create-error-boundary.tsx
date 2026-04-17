@@ -1,16 +1,16 @@
-"use client";
-
 import React from "react";
 
 import { normalizeError } from "@/shared/lib/errors/normalize";
 
+type FallbackProps = {
+  reset: () => void;
+  error: ReturnType<typeof normalizeError> | null;
+  rawError: unknown | null;
+};
+
 type Options = {
   name: string;
-  fallback?: (props: {
-    reset: () => void;
-    error: ReturnType<typeof normalizeError> | null;
-    rawError: unknown | null;
-  }) => React.ReactNode;
+  fallback?: React.ComponentType<FallbackProps>;
 };
 
 export function createErrorBoundary({ name, fallback }: Options) {
@@ -19,33 +19,51 @@ export function createErrorBoundary({ name, fallback }: Options) {
     {
       hasError: boolean;
       error: ReturnType<typeof normalizeError> | null;
-      rawError: unknown;
+      rawError: unknown | null;
+      resetKey: number;
     }
   > {
-    state = { hasError: false, error: null, rawError: null };
+    static displayName = `ErrorBoundary(${name})`;
 
-    componentDidCatch(error: unknown) {
+    override state = {
+      hasError: false,
+      error: null,
+      rawError: null,
+      resetKey: 0,
+    };
+
+    static getDerivedStateFromError(error: unknown) {
       const normalized = normalizeError(error);
 
-      if (process.env.NODE_ENV !== "production") {
-        console.error("React ErrorBoundary", normalized);
-      }
+      return {
+        hasError: true,
+        error: normalized,
+        rawError: error,
+      };
+    }
 
-      this.setState({ hasError: true, error: normalized, rawError: error });
+    override componentDidCatch(error: unknown, info: React.ErrorInfo) {
+      if (process.env.NODE_ENV !== "production") {
+        console.error("React ErrorBoundary", normalizeError(error), info);
+      }
     }
 
     reset = () => {
-      this.setState({ hasError: false, error: null, rawError: null });
+      if (this.state.hasError) {
+        this.setState((prev) => ({
+          hasError: false,
+          error: null,
+          rawError: null,
+          resetKey: prev.resetKey + 1,
+        }));
+      }
     };
 
-    render() {
+    override render() {
       if (this.state.hasError) {
         if (fallback) {
-          return fallback({
-            reset: this.reset,
-            error: this.state.error,
-            rawError: this.state.rawError,
-          });
+          const Fallback = fallback;
+          return <Fallback reset={this.reset} error={this.state.error} rawError={this.state.rawError} />;
         }
 
         return (
@@ -58,7 +76,7 @@ export function createErrorBoundary({ name, fallback }: Options) {
         );
       }
 
-      return this.props.children;
+      return <React.Fragment key={this.state.resetKey}>{this.props.children}</React.Fragment>;
     }
   };
 }

@@ -2,10 +2,6 @@ export * from "./array/group-by";
 
 export * from "./array/unique";
 
-export * from "./async/retry";
-
-export * from "./async/sleep";
-
 export * from "./format/date";
 
 export * from "./format/currency";

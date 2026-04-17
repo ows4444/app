@@ -1,25 +1,28 @@
 import { cookies } from "next/headers";
+import { cache } from "react";
 
-import { env } from "@/config/env";
 import { normalizeError } from "@/shared/lib/errors/normalize";
-import { serverFetch } from "@/shared/lib/fetch.server";
-import { withContext } from "@/shared/lib/infra/logger/with-context";
-import { getRequestContext } from "@/shared/lib/request-context";
+import { apiClient } from "@/shared/lib/infra/api-client";
+import { withContext } from "@/shared/lib/infra/logger/with-context.server";
+import { getRequestContext } from "@/shared/lib/request-context/request-context.server";
 
 import { mapUser } from "../mappers/user.mapper";
 import { type UserDTO } from "../types";
 
-export async function getSession(locale?: string) {
+export const getSession = cache(async (locale?: string) => {
   const ctx = await getRequestContext();
 
-  const log = withContext(ctx);
+  const log = withContext({
+    ...ctx,
+    scope: "auth:getSession",
+  });
 
   try {
     log.info("Fetching session");
 
     const cookieStore = await cookies();
 
-    const dto = await serverFetch<UserDTO>(new URL("/auth/me", env.API_URL).toString(), {
+    const dto = await apiClient<UserDTO>("/auth/me", {
       headers: {
         Cookie: cookieStore
           .getAll()
@@ -37,4 +40,4 @@ export async function getSession(locale?: string) {
 
     return null;
   }
-}
+});

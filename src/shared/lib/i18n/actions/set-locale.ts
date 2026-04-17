@@ -7,7 +7,8 @@ export async function setLocale(locale: string) {
 
   cookieStore.set("locale", locale, {
     path: "/",
-    httpOnly: false,
     sameSite: "lax",
+    httpOnly: true,
+    secure: true,
   });
 }

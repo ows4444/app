@@ -8,6 +8,9 @@ export function getStoredTheme(): Theme | null {
 }
 
 export function setStoredTheme(theme: Theme) {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(THEME_STORAGE_KEY, theme);
+  if (typeof document === "undefined") return;
+
+  localStorage.setItem("theme", theme);
+
+  document.cookie = `theme=${theme}; path=/; max-age=31536000`;
 }

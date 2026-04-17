@@ -7,18 +7,24 @@ import { ThemeProvider } from "@/providers/theme-provider";
 import { ToastProvider } from "@/providers/toast-provider";
 import { UIProvider } from "@/providers/ui-provider";
 import { type Messages } from "@/shared/lib/i18n/types";
+import "@/shared/lib/infra/react-query/online-manager";
+import { NetworkIndicator } from "@/shared/ui/organisms/network-indicator";
+import "@/state/network.adapter";
 
 export function Providers({ children, messages }: { children: React.ReactNode; messages: Messages }) {
   return (
     <ThemeProvider>
       <QueryProvider>
-        <AuthProvider>
-          <UIProvider>
-            <ToastProvider>
-              <I18nProvider messages={messages}>{children}</I18nProvider>
-            </ToastProvider>
-          </UIProvider>
-        </AuthProvider>
+        <I18nProvider messages={messages}>
+          <AuthProvider>
+            <UIProvider>
+              <ToastProvider>
+                <NetworkIndicator />
+                {children}
+              </ToastProvider>
+            </UIProvider>
+          </AuthProvider>
+        </I18nProvider>
       </QueryProvider>
     </ThemeProvider>
   );

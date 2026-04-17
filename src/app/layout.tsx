@@ -1,15 +1,19 @@
-import "./globals.css";
 import "@/app/i18n-init";
+import "./globals.css";
 
 import { HydrationBoundary } from "@tanstack/react-query";
 import { type Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import { Providers } from "@/app/providers";
+import { RootErrorBoundaryProvider } from "@/app/root-error-boundary";
 import { AUTH_QUERY_KEYS } from "@/features/auth/constants";
 import { getSession } from "@/features/auth/server/get-session";
-import { resolveLocale, getMessages } from "@/shared/lib/i18n/server";
+import { normalizeError } from "@/shared/lib/errors/normalize";
+import { getMessages, resolveLocale } from "@/shared/lib/i18n/server";
+import { withContext } from "@/shared/lib/infra/logger/with-context.server";
 import { getDehydratedState } from "@/shared/lib/infra/react-query/hydrate";
+import { getServerTheme } from "@/shared/lib/theme/theme.server";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,17 +31,46 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const log = withContext({ scope: "app:root-layout" });
   const locale = await resolveLocale();
 
-  const messages = await getMessages(locale);
+  const initialTheme = await getServerTheme();
 
-  const dehydratedState = await getDehydratedState([...AUTH_QUERY_KEYS.ME, locale], () => getSession(locale));
+  let messages;
+
+  try {
+    messages = await getMessages(locale);
+  } catch (err) {
+    const normalized = normalizeError(err);
+
+    log.error("Failed to load messages", { error: normalized });
+
+    throw err;
+  }
+
+  let dehydratedState;
+
+  try {
+    dehydratedState = await getDehydratedState(AUTH_QUERY_KEYS.ME(locale), () => getSession(locale));
+  } catch (err) {
+    const normalized = normalizeError(err);
+
+    log.error("Failed to prefetch session", { error: normalized });
+
+    dehydratedState = undefined;
+  }
 
   return (
-    <html lang={locale} dir={locale === "ar" ? "rtl" : "ltr"} className={`${geistSans.variable} ${geistMono.variable}`}>
+    <html
+      lang={locale}
+      dir={locale === "ar" ? "rtl" : "ltr"}
+      className={`${initialTheme === "dark" ? "dark" : ""} ${geistSans.variable} ${geistMono.variable}`}
+    >
       <body>
         <Providers messages={messages}>
-          <HydrationBoundary state={dehydratedState}>{children} </HydrationBoundary>
+          <HydrationBoundary state={dehydratedState}>
+            <RootErrorBoundaryProvider>{children}</RootErrorBoundaryProvider>
+          </HydrationBoundary>
         </Providers>
       </body>
     </html>

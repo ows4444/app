@@ -1,7 +1,10 @@
+import { useLocale } from "@/shared/lib/i18n/client";
+
 import { useMeQuery } from "../queries/useMe.query";
 
 export function useAuth() {
-  const { data, isLoading, error } = useMeQuery();
+  const locale = useLocale();
+  const { data, isLoading, error } = useMeQuery(locale);
 
   return {
     user: data ?? null,

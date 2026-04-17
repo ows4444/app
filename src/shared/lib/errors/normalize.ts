@@ -22,9 +22,9 @@ export function normalizeError(err: unknown): NormalizedError {
     return {
       message: err.message,
       name: err.name,
-      stack: err.stack,
 
-      cause: err.cause,
+      ...(e.cause !== undefined ? { cause: e.cause } : undefined),
+      ...(err.stack ? { stack: err.stack } : undefined),
 
       ...(e.status !== undefined && { status: e.status }),
       ...(e.code !== undefined && { code: e.code }),
@@ -32,7 +32,7 @@ export function normalizeError(err: unknown): NormalizedError {
     };
   }
 
-  if (typeof err === "object" && err !== null) {
+  if (err && typeof err === "object") {
     try {
       return {
         message: JSON.stringify(err),

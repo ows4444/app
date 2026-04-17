@@ -1,20 +1,22 @@
-import { apiClient } from "@/shared/lib/api-client";
-import { jsonHeaders } from "@/shared/lib/headers";
-
-import { type UserDTO } from "../types";
+import { loginInputSchema, userSchema } from "@/features/auth/api/contract";
+import { createEndpoint } from "@/shared/api/create-endpoint";
 
 export const authApi = {
-  login: (data: { email: string; password: string }) =>
-    apiClient("/auth/login", {
-      method: "POST",
-      headers: jsonHeaders(),
-      body: JSON.stringify(data),
-    }),
+  login: createEndpoint({
+    path: "/auth/login",
+    method: "POST",
+    input: loginInputSchema,
+    output: userSchema,
+  }),
 
-  me: () => apiClient<UserDTO>("/auth/me"),
+  me: createEndpoint({
+    path: "/auth/me",
+    output: userSchema,
 
-  logout: () =>
-    apiClient("/auth/logout", {
-      method: "POST",
-    }),
+    cache: "force-cache",
+    dedupeTTL: 5000,
+
+    tags: ["auth"],
+    priority: "high",
+  }),
 };

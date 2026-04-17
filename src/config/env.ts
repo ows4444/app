@@ -12,4 +12,5 @@ export const env = createEnv({
     NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME,
     API_URL: process.env.API_URL,
   },
+  skipValidation: false,
 });

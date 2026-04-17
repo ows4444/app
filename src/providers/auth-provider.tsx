@@ -10,12 +10,7 @@ const PUBLIC_ROUTES = ["/login", "/register"];
 
 type AuthContextType = ReturnType<typeof useAuth>;
 
-const AuthContext = createContext<AuthContextType>({
-  user: null,
-  isLoading: true,
-  isAuthenticated: false,
-  error: null,
-});
+const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const auth = useAuth();
@@ -28,11 +23,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (PUBLIC_ROUTES.includes(pathname)) return;
 
     if (auth.error instanceof SessionExpiredError) {
-      router.replace("/login");
+      router.replace("/");
     }
   }, [auth.error, pathname, router]);
 
   return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
 }
 
-export const useAuthContext = () => useContext(AuthContext);
+export const useAuthContext = () => {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuthContext must be used within AuthProvider");
+
+  return ctx;
+};

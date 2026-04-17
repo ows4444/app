@@ -1,8 +1,6 @@
 import { QueryCache, QueryClient } from "@tanstack/react-query";
 
-type RetryError = {
-  status?: number;
-};
+import { isAppError } from "@/shared/lib/errors";
 
 export function createQueryClient() {
   return new QueryClient({
@@ -17,11 +15,13 @@ export function createQueryClient() {
             return false;
           }
 
-          const err = error as RetryError;
+          if (isAppError(error)) {
+            if (!error.retryable) return false;
 
-          if (err?.status === 401) return false;
+            return failureCount < 2;
+          }
 
-          return failureCount < 2;
+          return failureCount < 1; // unknown errors → conservative
         },
 
         refetchOnWindowFocus: false,

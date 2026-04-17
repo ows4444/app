@@ -1,25 +1,28 @@
-import { useSafeQuery } from "@/shared/lib/infra/react-query/use-safe-query";
-import { isErr } from "@/shared/lib/result";
+import { type UseQueryOptions } from "@tanstack/react-query";
+
+import { type AppError } from "@/shared/lib/errors";
+import { useAppQuery } from "@/shared/lib/infra/react-query/create-query";
 
 import { authApi } from "../api/auth.api";
 import { AUTH_QUERY_KEYS } from "../constants";
 import { mapUser } from "../mappers/user.mapper";
 
-export const useMeQuery = (locale?: string) => {
-  const query = useSafeQuery({
-    queryKey: [...AUTH_QUERY_KEYS.ME, locale],
-    queryFn: async () => {
-      const res = await authApi.me();
+export const ME_QUERY_OPTIONS: Partial<
+  Omit<UseQueryOptions<ReturnType<typeof mapUser>, AppError>, "queryKey" | "queryFn">
+> = {
+  staleTime: 60_000,
+  retry: false,
+  throwOnError: true,
+};
 
-      if (isErr(res)) {
-        throw res.error;
-      }
-
-      return mapUser(res.data);
+export const useMeQuery = (locale: string) => {
+  return useAppQuery<ReturnType<typeof mapUser>, AppError>({
+    queryKey: AUTH_QUERY_KEYS.ME(locale),
+    queryFn: async ({ signal }) => {
+      const dto = await authApi.me(undefined, signal);
+      return mapUser(dto);
     },
-    staleTime: 60_000,
-    retry: false,
+    endpoint: authApi.me,
+    ...ME_QUERY_OPTIONS,
   });
-
-  return query;
 };

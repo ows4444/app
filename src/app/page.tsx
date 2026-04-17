@@ -1,6 +1,6 @@
 "use client";
 
-import { useT } from "@/providers/i18n-provider";
+import { useT } from "@/shared/lib/i18n/client";
 
 export default function Home() {
   const t = useT();

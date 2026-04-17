@@ -2,6 +2,7 @@ import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 import prettier from "eslint-config-prettier";
 import boundaries from "eslint-plugin-boundaries";
+import importPlugin from "eslint-plugin-import";
 import { defineConfig, globalIgnores } from "eslint/config";
 import { resolve } from "path";
 import tseslint from "typescript-eslint";
@@ -39,16 +40,19 @@ export default defineConfig([
   prettier,
 
   {
+    plugins: { import: importPlugin },
+
     languageOptions: {
       parser: tseslint.parser,
       parserOptions: {
-        project: "./tsconfig.json",
+        projectService: true,
         tsconfigRootDir: import.meta.dirname,
       },
     },
 
     files: ["**/*.ts", "**/*.tsx"],
     rules: {
+      "import/no-cycle": "error",
       "import/order": [
         "error",
         {
@@ -71,16 +75,40 @@ export default defineConfig([
         { ignorePrimitives: { string: true, number: true, boolean: true } },
       ],
 
-      "lines-between-class-members": ["error", "always", { exceptAfterSingleLine: true }],
+      "lines-between-class-members": [
+        "error",
+        {
+          enforce: [
+            { blankLine: "always", prev: "field", next: "field" },
+            { blankLine: "always", prev: "field", next: "method" },
+            { blankLine: "always", prev: "method", next: "field" },
+            { blankLine: "always", prev: "method", next: "method" },
+          ],
+        },
+      ],
+
       "padding-line-between-statements": [
         "error",
-        { blankLine: "any", prev: ["const", "let", "var"], next: ["const", "let", "var"] },
+        { blankLine: "always", prev: "directive", next: "*" },
+        { blankLine: "any", prev: "directive", next: "directive" },
+        { blankLine: "always", prev: "import", next: "*" },
+        { blankLine: "any", prev: "import", next: "import" },
         { blankLine: "always", prev: ["const", "let", "var"], next: "*" },
-        {
-          blankLine: "always",
-          prev: "*",
-          next: ["if", "for", "while", "switch", "try", "return", "throw", "function", "class", "export"],
-        },
+        { blankLine: "any", prev: ["const", "let", "var"], next: ["const", "let", "var"] },
+        { blankLine: "always", prev: "*", next: "return" },
+        { blankLine: "any", prev: ["const", "let", "var"], next: "return" },
+        { blankLine: "always", prev: "*", next: "throw" },
+        { blankLine: "any", prev: ["const", "let", "var"], next: "throw" },
+        { blankLine: "always", prev: "*", next: ["if", "for", "while", "do", "switch", "try"] },
+        { blankLine: "always", prev: ["if", "for", "while", "do", "switch", "try"], next: "*" },
+        { blankLine: "any", prev: ["const", "let", "var"], next: ["if", "for", "while", "do", "switch", "try"] },
+        { blankLine: "always", prev: "*", next: ["function", "class"] },
+        { blankLine: "always", prev: ["function", "class"], next: "*" },
+        { blankLine: "always", prev: "multiline-block-like", next: "*" },
+        { blankLine: "always", prev: "multiline-expression", next: "*" },
+        { blankLine: "always", prev: "*", next: "multiline-block-like" },
+        { blankLine: "always", prev: "*", next: "export" },
+        { blankLine: "any", prev: "export", next: "export" },
       ],
 
       "no-multiple-empty-lines": ["error", { max: 1, maxBOF: 0, maxEOF: 0 }],
@@ -138,11 +166,12 @@ export default defineConfig([
     settings: {
       "boundaries/root-path": resolve(import.meta.dirname),
       "import/resolver": {
-        typescript: { alwaysTryTypes: true },
+        typescript: {
+          alwaysTryTypes: true,
+          project: "./tsconfig.json",
+        },
       },
-
       "boundaries/dependency-nodes": ["import"],
-
       "boundaries/elements": [
         // ── TOOLING ──────────────────────────────────────────────────────────
         {
@@ -158,6 +187,7 @@ export default defineConfig([
 
         // ── SHARED — specific first so catch-all doesn't swallow them ────────
         { type: "shared-ui", pattern: "src/shared/ui/**", mode: "folder" },
+        { type: "shared-api", pattern: "src/shared/api/**", mode: "folder" },
         { type: "shared-infra", pattern: "src/shared/lib/infra/**", mode: "folder" },
         { type: "shared-lib-utils", pattern: "src/shared/lib/utils/**", mode: "folder" },
         // Merged: was duplicated with two different paths in original config
@@ -327,6 +357,7 @@ export default defineConfig([
                 { to: { type: "feature-constants" } },
                 { to: { type: "config" } }, // API clients need base URL / auth config
                 { to: { type: "shared-lib" } },
+                { to: { type: "shared-api" } },
                 { to: { type: "shared-infra" } },
                 { to: { type: "shared-types" } },
               ],
@@ -413,6 +444,13 @@ export default defineConfig([
               ],
               disallow: [
                 // No direct cross-feature imports — use the public index barrel
+
+                {
+                  to: {
+                    type: ["feature-api", "feature-hooks", "feature-query", "feature-ui"],
+                  },
+                },
+
                 {
                   to: {
                     type: "feature",
@@ -449,6 +487,7 @@ export default defineConfig([
               allow: [
                 { to: { type: "shared-lib" } },
                 { to: { type: "shared-types" } },
+                { to: { type: "shared-infra" } },
                 { to: { type: "feature-types" } }, // slices may type their shape against feature types
               ],
             },
@@ -485,8 +524,18 @@ export default defineConfig([
               allow: [
                 { to: { type: "config" } },
                 { to: { type: "shared-lib" } },
+                { to: { type: "shared-api" } },
                 { to: { type: "shared-utils" } },
                 { to: { type: "shared-types" } },
+              ],
+            },
+
+            {
+              from: { type: "shared-api" },
+              allow: [
+                //
+                { to: { type: "shared-lib" } },
+                { to: { type: "shared-infra" } },
               ],
             },
 
@@ -500,6 +549,7 @@ export default defineConfig([
             {
               from: { type: "shared-ui" },
               allow: [
+                { to: { type: "state" } },
                 { to: { type: "shared-utils" } },
                 { to: { type: "shared-lib" } },
                 { to: { type: "shared-types" } },

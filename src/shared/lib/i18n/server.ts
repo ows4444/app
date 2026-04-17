@@ -24,6 +24,7 @@ export async function getMessages(locale: Locale) {
   );
 
   return {
+    __locale: locale,
     ...global,
     ...Object.fromEntries(entries),
   };
