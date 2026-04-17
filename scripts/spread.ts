@@ -39,6 +39,11 @@ for (const file of inputFiles) {
   BLOCK_REGEX.lastIndex = 0;
 
   while ((match = BLOCK_REGEX.exec(md)) !== null) {
+    if (!match[1] || !match[2]) {
+      console.warn(`✖ Skipping invalid block in ${file} at position ${match.index}`);
+      continue;
+    }
+
     const relativePath = match[1].trim();
 
     const body = match[2].trim();
