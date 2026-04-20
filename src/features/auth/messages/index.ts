@@ -1,4 +1,4 @@
-import { registerMessages } from "@/shared/lib/i18n/registry";
+import { registerMessages } from "@/shared/i18n/registry";
 
 const loaders = {
   en: () => import("./en.json").then((m) => m.default),

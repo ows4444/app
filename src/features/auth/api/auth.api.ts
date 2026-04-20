@@ -1,20 +1,26 @@
 import { loginInputSchema, userSchema } from "@/features/auth/api/contract";
-import { createEndpoint } from "@/shared/api/create-endpoint";
+import { apiClient } from "@/shared/infrastructure/api-client/api-client.client";
 
 export const authApi = {
-  login: createEndpoint({
-    path: "/auth/login",
-    method: "POST",
-    input: loginInputSchema,
-    output: userSchema,
-  }),
+  async login(input: unknown, signal?: AbortSignal) {
+    const parsed = loginInputSchema.parse(input);
 
-  me: createEndpoint({
-    path: "/auth/me",
-    output: userSchema,
+    const res = await apiClient<unknown>("/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(parsed),
+      ...(signal && { signal }),
+    });
 
-    cache: "no-store", // auth must never cache
+    return userSchema.parse(res);
+  },
+  async me(signal?: AbortSignal) {
+    const res = await apiClient<unknown>("/auth/me", {
+      method: "GET",
+      cache: "no-store",
+      ...(signal && { signal }),
+    });
 
-    tags: ["auth"],
-  }),
+    return userSchema.parse(res);
+  },
 };

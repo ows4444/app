@@ -1,16 +1,15 @@
 import { cookies } from "next/headers";
-import { cache } from "react";
 import "server-only";
 
-import { normalizeError } from "@/shared/lib/errors/normalize";
-import { apiClient } from "@/shared/lib/infra/api-client/api-client.server";
-import { withContext } from "@/shared/lib/infra/logger/with-context.server";
-import { getServerRequestContext } from "@/shared/lib/request-context/request-context.server";
+import { normalizeError } from "@/shared/core/errors/normalize";
+import { apiClient } from "@/shared/infrastructure/api-client/api-client.server";
+import { withContext } from "@/shared/infrastructure/logger/with-context.server";
+import { getServerRequestContext } from "@/shared/request/request-context.server";
 
 import { mapUser } from "../mappers/user.mapper";
 import { type UserDTO } from "../types";
 
-export const getSession = cache(async (locale?: string) => {
+export async function getSession(locale?: string) {
   const ctx = await getServerRequestContext();
 
   const log = withContext({
@@ -31,6 +30,7 @@ export const getSession = cache(async (locale?: string) => {
           .join("; "),
         ...(locale != null ? { "Accept-Language": locale } : {}),
       },
+      cache: "no-store",
     });
 
     log.info("Session fetched", { userId: dto.id });
@@ -41,4 +41,4 @@ export const getSession = cache(async (locale?: string) => {
 
     return null;
   }
-});
+}

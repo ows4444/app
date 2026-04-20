@@ -1,5 +1,7 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+
 export function AuthErrorFallback({
   reset,
   error,
@@ -8,6 +10,7 @@ export function AuthErrorFallback({
   error: { message: string; status?: number } | null;
 }) {
   const isSessionExpired = error?.message === "SESSION_EXPIRED";
+  const router = useRouter();
 
   return (
     <div className="flex flex-col gap-3 p-4">
@@ -20,7 +23,12 @@ export function AuthErrorFallback({
           </button>
         )}
 
-        <button onClick={() => (window.location.href = "/login")} className="underline">
+        <button
+          onClick={() => {
+            router.push("/login");
+          }}
+          className="underline"
+        >
           Go to login
         </button>
       </div>

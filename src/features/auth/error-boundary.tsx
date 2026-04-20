@@ -1,4 +1,4 @@
-import { createErrorBoundary } from "@/shared/lib/react/create-error-boundary";
+import { createErrorBoundary } from "@/shared/react/create-error-boundary";
 
 import { AuthErrorFallback } from "./error-fallback";
 

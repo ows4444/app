@@ -1,7 +1,7 @@
 import { type UseQueryOptions } from "@tanstack/react-query";
 
-import { type AppError } from "@/shared/lib/errors";
-import { useAppQuery } from "@/shared/lib/infra/react-query/create-query";
+import { type AppError } from "@/shared/core/errors";
+import { useAppQuery } from "@/shared/infrastructure/react-query/create-query";
 
 import { authApi } from "../api/auth.api";
 import { AUTH_QUERY_KEYS } from "../constants";
@@ -21,10 +21,9 @@ export const useMeQuery = (locale: string) => {
   return useAppQuery<ReturnType<typeof mapUser>, AppError>({
     queryKey: AUTH_QUERY_KEYS.ME(locale),
     queryFn: async ({ signal }) => {
-      const dto = await authApi.me(undefined, signal);
+      const dto = await authApi.me(signal);
       return mapUser(dto);
     },
-    endpoint: authApi.me,
     ...ME_QUERY_OPTIONS,
   });
 };

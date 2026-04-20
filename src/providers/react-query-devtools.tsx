@@ -2,7 +2,13 @@
 
 import dynamic from "next/dynamic";
 
-export const ReactQueryDevtools =
-  process.env.NODE_ENV === "development"
-    ? dynamic(() => import("@tanstack/react-query-devtools").then((mod) => mod.ReactQueryDevtools))
-    : () => null;
+export const ReactQueryDevtools = dynamic(
+  () =>
+    process.env.NODE_ENV === "development"
+      ? import("@tanstack/react-query-devtools").then((mod) => mod.ReactQueryDevtools)
+      : Promise.resolve(() => null),
+  {
+    ssr: false,
+    loading: () => null,
+  },
+);

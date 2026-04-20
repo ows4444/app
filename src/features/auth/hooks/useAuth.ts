@@ -1,4 +1,4 @@
-import { useLocale } from "@/shared/lib/i18n/client";
+import { useLocale } from "@/shared/i18n/client";
 
 import { useMeQuery } from "../queries/useMe.query";
 

@@ -6,6 +6,8 @@ export function NetworkIndicator() {
   const [isOnline, setIsOnline] = useState(true);
 
   useEffect(() => {
+    if (typeof navigator === "undefined") return;
+
     const update = () => {
       setIsOnline(navigator.onLine);
     };

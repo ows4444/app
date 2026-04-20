@@ -1,5 +1,7 @@
 "use client";
 
+import { memo } from "react";
+
 import { AuthProvider } from "@/providers/auth-provider";
 import { I18nProvider } from "@/providers/i18n-provider";
 import { QueryProvider } from "@/providers/query-provider";
@@ -7,11 +9,10 @@ import { ReactQueryDevtools } from "@/providers/react-query-devtools";
 import { ThemeProvider } from "@/providers/theme-provider";
 import { ToastProvider } from "@/providers/toast-provider";
 import { UIProvider } from "@/providers/ui-provider";
-import { type Messages } from "@/shared/lib/i18n/types";
-import "@/shared/lib/infra/react-query/online-manager";
+import { type Messages } from "@/shared/i18n/types";
 import { NetworkIndicator } from "@/shared/ui/organisms/network-indicator";
 
-export function Providers({
+function ProvidersImpl({
   children,
   messages,
   initialTheme,
@@ -22,9 +23,9 @@ export function Providers({
 }) {
   return (
     <ThemeProvider initialTheme={initialTheme}>
-      <QueryProvider>
-        <ReactQueryDevtools initialIsOpen={false} />
-        <I18nProvider messages={messages}>
+      <I18nProvider messages={messages}>
+        <QueryProvider>
+          <ReactQueryDevtools initialIsOpen={false} />
           <AuthProvider>
             <UIProvider>
               <ToastProvider>
@@ -33,8 +34,10 @@ export function Providers({
               </ToastProvider>
             </UIProvider>
           </AuthProvider>
-        </I18nProvider>
-      </QueryProvider>
+        </QueryProvider>
+      </I18nProvider>
     </ThemeProvider>
   );
 }
+
+export const Providers = memo(ProvidersImpl);

@@ -14,15 +14,35 @@ const CROSS_FEATURE_SUB_LAYERS = [
   "feature-api",
   "feature-mapper",
   "feature-server",
-  "feature-config",
-  "feature-root",
-  "feature-constants",
-  "feature-types",
+];
+
+const SHARED_LAYERS = [
+  "shared",
+  "shared-ui",
+  "shared-api",
+  "shared-infra",
+  "shared-utils",
+  "shared-types",
+  "shared-core",
+  "shared-http",
+  "shared-i18n",
+  "shared-react",
+  "shared-request",
+  "shared-security",
+  "shared-theme",
 ];
 
 const crossFeatureDisallow = CROSS_FEATURE_SUB_LAYERS.flatMap((type) => [
   {
     from: { type },
+    allow: [
+      {
+        to: {
+          type,
+          captured: { feature: "{{from.captured.feature}}" }, // ✅ allow same feature
+        },
+      },
+    ],
     disallow: [
       {
         to: {
@@ -185,20 +205,22 @@ export default defineConfig([
         { type: "app", pattern: "src/app/**", mode: "folder" },
         { type: "config", pattern: "src/config/**", mode: "folder" },
 
-        // ── SHARED — specific first so catch-all doesn't swallow them ────────
+        // ── SHARED (complete coverage) ─────────────────────────────
+
         { type: "shared-ui", pattern: "src/shared/ui/**", mode: "folder" },
         { type: "shared-api", pattern: "src/shared/api/**", mode: "folder" },
-        { type: "shared-infra", pattern: "src/shared/lib/infra/**", mode: "folder" },
-        { type: "shared-lib-utils", pattern: "src/shared/lib/utils/**", mode: "folder" },
-        // Merged: was duplicated with two different paths in original config
-        {
-          type: "shared-types",
-          pattern: ["src/shared/lib/types/**", "src/shared/types/**"],
-          mode: "folder",
-        },
-        // Catch-all for everything else under shared/lib (after specifics above)
-        { type: "shared-lib", pattern: "src/shared/lib/**", mode: "folder" },
+        { type: "shared-infra", pattern: "src/shared/infrastructure/**", mode: "folder" },
         { type: "shared-utils", pattern: "src/shared/utils/**", mode: "folder" },
+        { type: "shared-types", pattern: "src/shared/types/**", mode: "folder" },
+
+        // NEW (fix unknown errors)
+        { type: "shared-core", pattern: "src/shared/core/**", mode: "folder" },
+        { type: "shared-http", pattern: "src/shared/http/**", mode: "folder" },
+        { type: "shared-i18n", pattern: "src/shared/i18n/**", mode: "folder" },
+        { type: "shared-react", pattern: "src/shared/react/**", mode: "folder" },
+        { type: "shared-request", pattern: "src/shared/request/**", mode: "folder" },
+        { type: "shared-security", pattern: "src/shared/security/**", mode: "folder" },
+        { type: "shared-theme", pattern: "src/shared/theme/**", mode: "folder" },
 
         // ── FEATURE — specific first, catch-all last ──────────────────────────
         {
@@ -237,31 +259,7 @@ export default defineConfig([
           capture: ["feature"],
           mode: "folder",
         },
-        {
-          type: "feature-config",
-          pattern: "src/features/*/config/**",
-          capture: ["feature"],
-          mode: "folder",
-        },
-        {
-          type: "feature-constants",
-          pattern: "src/features/*/constants.{ts,tsx}",
-          capture: ["feature"],
-          mode: "file",
-        },
-        {
-          type: "feature-types",
-          pattern: "src/features/*/types.{ts,tsx}",
-          capture: ["feature"],
-          mode: "file",
-        },
-        {
-          type: "feature-root",
-          pattern: "src/features/*/index.{ts,tsx}",
-          capture: ["feature"],
-          mode: "file",
-        },
-        // Catch-all for anything else directly inside a feature folder
+
         {
           type: "feature",
           pattern: "src/features/*",
@@ -294,83 +292,33 @@ export default defineConfig([
               allow: [
                 { to: { type: "config" } },
                 { to: { type: "feature" } },
-                { to: { type: "feature-root" } },
                 { to: { type: "feature-ui" } }, // page-level component composition
-                { to: { type: "feature-types" } },
-                { to: { type: "feature-constants" } },
                 { to: { type: "feature-hooks" } },
                 { to: { type: "feature-server" } },
-                { to: { type: "shared-ui" } },
-                { to: { type: "shared-infra" } },
-                { to: { type: "shared-utils" } },
-                { to: { type: "shared-lib" } },
-                { to: { type: "shared-types" } },
+                { to: { type: SHARED_LAYERS } },
                 { to: { type: "providers" } },
                 { to: { type: "state" } },
               ],
             },
 
-            // ── FEATURE ROOT (public surface / barrel file) ──────────────────
-            // index.ts re-exports from every internal sub-layer of the same feature.
             {
-              from: { type: "feature-root" },
-              allow: [
-                { to: { type: "feature-ui" } },
-                { to: { type: "feature-hooks" } },
-                { to: { type: "feature-query" } },
-                { to: { type: "feature-api" } },
-                { to: { type: "feature-mapper" } },
-                { to: { type: "feature-server" } },
-                { to: { type: "feature-config" } },
-                { to: { type: "feature-types" } },
-                { to: { type: "feature-constants" } },
-              ],
-            },
-
-            // ── FEATURE CORE (pure primitives, no outbound deps) ─────────────
-            // types.ts: zero dependencies — importing anything here is a smell
-            { from: { type: "feature-types" }, allow: [] },
-
-            // constants.ts: only needs types
-            {
-              from: { type: "feature-constants" },
-              allow: [{ to: { type: "feature-types" } }],
-            },
-
-            // ── FEATURE CONFIG ────────────────────────────────────────────────
-            {
-              from: { type: "feature-config" },
-              allow: [
-                { to: { type: "feature-types" } },
-                { to: { type: "feature-constants" } },
-                { to: { type: "shared-utils" } },
-                { to: { type: "shared-lib" } },
-                { to: { type: "shared-types" } },
-              ],
+              from: { type: SHARED_LAYERS },
+              allow: [{ to: { type: SHARED_LAYERS } }],
             },
 
             // ── FEATURE API (data fetching, no business logic) ────────────────
             {
               from: { type: "feature-api" },
               allow: [
-                { to: { type: "feature-types" } },
-                { to: { type: "feature-constants" } },
                 { to: { type: "config" } }, // API clients need base URL / auth config
-                { to: { type: "shared-lib" } },
-                { to: { type: "shared-api" } },
-                { to: { type: "shared-infra" } },
-                { to: { type: "shared-types" } },
+                { to: { type: SHARED_LAYERS } },
               ],
             },
 
             // ── FEATURE MAPPER (pure data transformation) ─────────────────────
             {
               from: { type: "feature-mapper" },
-              allow: [
-                { to: { type: "feature-types" } },
-                { to: { type: "shared-lib" } },
-                { to: { type: "shared-types" } },
-              ],
+              allow: [{ to: { type: SHARED_LAYERS } }],
             },
 
             // ── FEATURE QUERY (TanStack Query / SWR hooks around the API) ─────
@@ -378,26 +326,15 @@ export default defineConfig([
               from: { type: "feature-query" },
               allow: [
                 { to: { type: "feature-api" } },
-                { to: { type: "feature-constants" } },
                 { to: { type: "feature-mapper" } },
-                { to: { type: "feature-types" } },
-                { to: { type: "shared-lib" } },
-                { to: { type: "shared-infra" } },
-                { to: { type: "shared-types" } },
+                { to: { type: SHARED_LAYERS } },
               ],
             },
 
             // ── FEATURE HOOKS (business logic hooks, may read from state) ─────
             {
               from: { type: "feature-hooks" },
-              allow: [
-                { to: { type: "feature-query" } },
-                { to: { type: "feature-types" } },
-                { to: { type: "feature-constants" } },
-                { to: { type: "shared-lib" } },
-                { to: { type: "shared-types" } },
-                { to: { type: "state" } },
-              ],
+              allow: [{ to: { type: "feature-query" } }, { to: { type: SHARED_LAYERS } }, { to: { type: "state" } }],
             },
 
             // ── FEATURE UI (components — must never call API layer directly) ──
@@ -406,11 +343,8 @@ export default defineConfig([
               allow: [
                 { to: { type: "feature-hooks" } },
                 { to: { type: "feature-query" } },
-                { to: { type: "feature-types" } },
-                { to: { type: "feature-constants" } },
                 { to: { type: "shared-ui" } },
                 { to: { type: "shared-utils" } },
-                { to: { type: "shared-lib" } },
                 { to: { type: "shared-types" } },
                 { to: { type: "state" } },
               ],
@@ -421,36 +355,19 @@ export default defineConfig([
             // ── FEATURE SERVER (Next.js Server Actions / route handlers) ──────
             {
               from: { type: "feature-server" },
-              allow: [
-                { to: { type: "feature-mapper" } },
-                { to: { type: "feature-types" } },
-                { to: { type: "feature-constants" } },
-                { to: { type: "config" } },
-                { to: { type: "shared-lib" } },
-                { to: { type: "shared-infra" } },
-                { to: { type: "shared-types" } },
-              ],
+              allow: [{ to: { type: "feature-mapper" } }, { to: { type: "config" } }, { to: { type: SHARED_LAYERS } }],
             },
 
             // ── FEATURE catch-all (misc files inside a feature folder) ────────
             {
               from: { type: "feature" },
               allow: [
-                { to: { type: "shared-infra" } },
-                { to: { type: "shared-utils" } },
-                { to: { type: "shared-lib" } },
-                { to: { type: "shared-types" } },
+                { to: { type: "feature", captured: { feature: "{{from.captured.feature}}" } } }, // ✅ SAME feature allowed
+                { to: { type: "shared" } },
+                { to: { type: SHARED_LAYERS } },
                 { to: { type: "state" } },
               ],
               disallow: [
-                // No direct cross-feature imports — use the public index barrel
-
-                {
-                  to: {
-                    type: ["feature-api", "feature-hooks", "feature-query", "feature-ui"],
-                  },
-                },
-
                 {
                   to: {
                     type: "feature",
@@ -465,56 +382,41 @@ export default defineConfig([
             // Generated from CROSS_FEATURE_SUB_LAYERS above.
             ...crossFeatureDisallow,
 
+            // ── ALLOW SAME-FEATURE ACCESS FOR SUB-LAYERS ───────────────────
+            ...CROSS_FEATURE_SUB_LAYERS.map((type) => ({
+              from: { type },
+              allow: [
+                {
+                  to: {
+                    type: "feature",
+                    captured: { feature: "{{from.captured.feature}}" },
+                  },
+                },
+              ],
+            })),
+
             // ── PROVIDERS ────────────────────────────────────────────────────
             {
               from: { type: "providers" },
               allow: [
-                { to: { type: "config" } },
-                { to: { type: "feature-root" } },
+                { to: { type: "feature" } },
                 { to: { type: "feature-hooks" } },
-                { to: { type: "feature-types" } },
-                { to: { type: "shared-infra" } },
-                { to: { type: "shared-types" } },
-                { to: { type: "shared-lib" } },
-                { to: { type: "shared-ui" } },
+                { to: { type: SHARED_LAYERS } },
                 { to: { type: "state" } },
+                { to: { type: "config" } },
               ],
             },
 
             // ── STATE (Zustand / Jotai / Redux slices) ────────────────────────
             {
               from: { type: "state" },
-              allow: [
-                { to: { type: "shared-lib" } },
-                { to: { type: "shared-types" } },
-                { to: { type: "shared-infra" } },
-                { to: { type: "feature-types" } }, // slices may type their shape against feature types
-              ],
+              allow: [{ to: { type: "shared-types" } }, { to: { type: "shared-infra" } }],
             },
 
             // ── SHARED — strict bottom-up chain; no shared layer may import app/feature ──
 
             // shared-types: truly leaf — zero outbound deps
             { from: { type: "shared-types" }, allow: [] },
-
-            // shared-lib-utils: only needs types
-            {
-              from: { type: "shared-lib-utils" },
-              allow: [{ to: { type: "shared-types" } }],
-            },
-
-            // shared-lib (general utilities, formatters, etc.)
-            {
-              from: { type: "shared-lib" },
-              allow: [
-                { to: { type: "shared-lib" } }, // intra-lib imports (e.g. lib/date → lib/format)
-                { to: { type: "shared-lib-utils" } },
-                { to: { type: "shared-utils" } },
-                { to: { type: "shared-types" } },
-              ],
-              // shared-lib must NOT touch config — accept values as parameters
-              // or read process.env directly. This keeps shared-lib isomorphic.
-            },
 
             // shared-infra (fetch client, auth SDK wrappers, logger, etc.)
             // Infra lives closest to the network and is the one shared layer
@@ -523,7 +425,6 @@ export default defineConfig([
               from: { type: "shared-infra" },
               allow: [
                 { to: { type: "config" } },
-                { to: { type: "shared-lib" } },
                 { to: { type: "shared-api" } },
                 { to: { type: "shared-utils" } },
                 { to: { type: "shared-types" } },
@@ -534,7 +435,6 @@ export default defineConfig([
               from: { type: "shared-api" },
               allow: [
                 //
-                { to: { type: "shared-lib" } },
                 { to: { type: "shared-infra" } },
               ],
             },
@@ -548,27 +448,28 @@ export default defineConfig([
             // shared-ui (design system / Radix wrappers)
             {
               from: { type: "shared-ui" },
+              allow: [{ to: { type: "state" } }, { to: { type: "shared-utils" } }, { to: { type: "shared-types" } }],
+            },
+
+            {
+              from: { type: "config" },
               allow: [
-                { to: { type: "state" } },
-                { to: { type: "shared-utils" } },
-                { to: { type: "shared-lib" } },
+                //
                 { to: { type: "shared-types" } },
               ],
             },
 
             {
-              from: { type: "config" },
-              allow: [{ to: { type: "shared-lib" } }, { to: { type: "shared-types" } }],
-            },
-
-            {
               from: { type: "proxy" },
-              allow: [{ to: { type: "config" } }, { to: { type: "shared-lib" } }, { to: { type: "shared-infra" } }],
+              allow: [{ to: { type: "config" } }, { to: { type: SHARED_LAYERS } }],
             },
 
             {
               from: { type: "scripts" },
-              allow: [{ to: { type: "config" } }, { to: { type: "shared-lib" } }],
+              allow: [
+                //
+                { to: { type: "config" } },
+              ],
             },
 
             { from: { type: "tooling" }, allow: [] },
@@ -586,7 +487,6 @@ export default defineConfig([
       "boundaries/dependencies": "off",
     },
   },
-
   {
     files: ["eslint.config.mjs", "next.config.ts", "postcss.config.js", "tailwind.config.ts", "scripts/**"],
     rules: {

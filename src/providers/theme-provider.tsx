@@ -2,9 +2,9 @@
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
-import { applyThemeToDOM } from "@/shared/lib/theme/theme.dom";
-import { getStoredTheme, setStoredTheme } from "@/shared/lib/theme/theme.storage";
-import { type Theme, type ThemeContextValue } from "@/shared/lib/theme/theme.types";
+import { applyThemeToDOM } from "@/shared/theme/theme.dom";
+import { getStoredTheme, setStoredTheme } from "@/shared/theme/theme.storage";
+import { type Theme, type ThemeContextValue } from "@/shared/theme/theme.types";
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 

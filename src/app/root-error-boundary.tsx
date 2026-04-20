@@ -1,6 +1,6 @@
 "use client";
 
-import { createErrorBoundary } from "@/shared/lib/react/create-error-boundary";
+import { createErrorBoundary } from "@/shared/react/create-error-boundary";
 
 const RootErrorBoundary = createErrorBoundary({ name: "Root" });
 

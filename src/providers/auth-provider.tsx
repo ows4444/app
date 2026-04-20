@@ -4,7 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { createContext, useContext, useEffect } from "react";
 
 import { useAuth } from "@/features/auth";
-import { SessionExpiredError } from "@/shared/lib/errors";
+import { SessionExpiredError } from "@/shared/core/errors";
 
 const PUBLIC_ROUTES = ["/login", "/register"];
 
@@ -23,7 +23,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (PUBLIC_ROUTES.includes(pathname)) return;
 
     if (auth.error instanceof SessionExpiredError) {
-      router.replace("/");
+      router.replace("/login");
     }
   }, [auth.error, pathname, router]);
 

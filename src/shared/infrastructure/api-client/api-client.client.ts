@@ -1,0 +1,23 @@
+import { withContext } from "@/shared/infrastructure/logger/with-context.client";
+import { getClientRequestContext } from "@/shared/request/request-context.client";
+import { getCsrfToken } from "@/shared/security/csrf.browser";
+
+import { executeRequest } from "./api-client.base";
+
+export async function apiClient<T>(
+  path: string,
+  options?: RequestInit & { retry?: { retries?: number }; cache?: RequestCache },
+) {
+  const ctx = getClientRequestContext();
+  const log = withContext({ scope: "api-client" });
+
+  const csrfToken = getCsrfToken();
+
+  const headers: HeadersInit = {
+    ...(options?.headers ?? {}),
+    ...(ctx ? { "x-request-id": ctx.traceId } : {}),
+    ...(csrfToken ? { "x-csrf-token": csrfToken } : {}),
+  };
+
+  return executeRequest<T>(path, options, headers, log);
+}
