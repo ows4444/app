@@ -1,4 +1,4 @@
-export function ScreenLoader({ isLoading }: { isLoading: boolean }) {
+export function ScreenLoader({ isLoading }: { readonly isLoading: boolean }) {
   if (!isLoading) return null;
 
   return (

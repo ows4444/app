@@ -6,7 +6,7 @@ import { Toaster } from "react-hot-toast";
 import { useTheme } from "@/providers/theme-provider";
 import { getToastOptions } from "@/shared/ui/toast/toast.config";
 
-export function ToastProvider({ children }: { children: React.ReactNode }) {
+export function ToastProvider({ children }: { readonly children: React.ReactNode }) {
   const { theme } = useTheme();
 
   const options = useMemo(() => getToastOptions(theme), [theme]);

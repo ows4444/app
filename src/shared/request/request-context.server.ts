@@ -6,10 +6,16 @@ import { cache } from "react";
 export const getServerRequestContext = cache(async () => {
   const [cookieStore, headerStore] = await Promise.all([cookies(), headers()]);
 
+  const traceId =
+    headerStore.get("x-request-id") ??
+    (typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : (() => {
+          throw new Error("crypto.randomUUID is not supported in this environment");
+        })());
+
   return {
-    traceId:
-      headerStore.get("x-request-id") ??
-      (typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : Math.random().toString(36)),
+    traceId,
     locale: cookieStore.get("locale")?.value ?? null,
   };
 });

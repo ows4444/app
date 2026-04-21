@@ -1,6 +1,6 @@
 import { cookies, headers } from "next/headers";
 
-import { type Theme } from "@/shared/theme/theme.types";
+import { type Theme } from "@/shared/theme";
 
 export async function getServerTheme(): Promise<Theme> {
   const cookieStore = await cookies();

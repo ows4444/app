@@ -5,7 +5,7 @@ import { useMemo } from "react";
 
 import { ScreenLoader } from "@/shared/ui/organisms/screen-loader";
 
-export function UIProvider({ children }: { children: React.ReactNode }) {
+export function UIProvider({ children }: { readonly children: React.ReactNode }) {
   const isFetching = useIsFetching({
     predicate: (query) => query.meta?.blocking === true,
   });

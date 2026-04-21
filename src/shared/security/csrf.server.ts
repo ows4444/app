@@ -49,7 +49,7 @@ export function generateCsrfToken() {
   const payload: CsrfPayload = {
     token: crypto.randomBytes(32).toString("hex"),
     iat: now,
-    exp: now + 1000 * 60 * 10, // 10 min
+    exp: now + 1000 * 60 * 5,
   };
 
   return encode(payload);
@@ -60,7 +60,11 @@ export function verifyCsrf(encoded: string): boolean {
 
   if (!payload) return false;
 
-  if (Date.now() > payload.exp) return false;
+  const now = Date.now();
+
+  if (now > payload.exp) return false;
+
+  if (payload.iat > now + 1000 * 10) return false;
 
   return true;
 }

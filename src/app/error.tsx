@@ -1,14 +1,16 @@
 "use client";
 
-import "@/app/i18n-init";
 import { useEffect } from "react";
 
 import { normalizeError } from "@/shared/core/errors/normalize";
-import { withContext } from "@/shared/infrastructure/logger/with-context.client";
+import { withContext } from "@/shared/infra/logger/with-context.client";
 
 const log = withContext({ scope: "app:error-boundary" });
 
-export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+export default function ErrorBoundary({
+  error,
+  reset,
+}: Readonly<{ error: Error & { digest?: string }; reset: () => void }>) {
   useEffect(() => {
     log.error("App Error", { error: normalizeError(error) });
   }, [error]);

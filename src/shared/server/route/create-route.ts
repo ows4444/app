@@ -26,7 +26,13 @@ export function createMutation(handler: AppRouteHandler): AppRouteHandler {
     const encoded = generateCsrfToken();
     const payload = decode(encoded);
 
-    const next = NextResponse.from(res);
+    const headers = new Headers(res.headers);
+
+    const next = new NextResponse(res.body, {
+      status: res.status,
+      statusText: res.statusText,
+      headers,
+    });
 
     if (payload) {
       // httpOnly signed payload
@@ -37,13 +43,8 @@ export function createMutation(handler: AppRouteHandler): AppRouteHandler {
         path: "/",
       });
 
-      // readable token for header
-      next.cookies.set("csrf_token", payload.token, {
-        httpOnly: false,
-        sameSite: "lax",
-        secure: process.env.NODE_ENV === "production",
-        path: "/",
-      });
+      // ✅ critical fix: sync client immediately
+      next.headers.set("x-csrf-token", payload.token);
     } else {
       // fallback safety (should never happen)
       return NextResponse.json({ error: "CSRF_ROTATION_FAILED" }, { status: 500 });

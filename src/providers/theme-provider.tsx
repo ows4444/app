@@ -2,14 +2,15 @@
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
-import { applyThemeToDOM } from "@/shared/theme/theme.dom";
-import { getStoredTheme, setStoredTheme } from "@/shared/theme/theme.storage";
-import { type Theme, type ThemeContextValue } from "@/shared/theme/theme.types";
+import { applyThemeToDOM, getStoredTheme, setStoredTheme, type Theme, type ThemeContextValue } from "@/shared/theme";
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
-export function ThemeProvider({ children, initialTheme }: { children: React.ReactNode; initialTheme: Theme }) {
-  const [theme, setThemeState] = useState<Theme>(initialTheme);
+export function ThemeProvider({
+  children,
+  initialTheme,
+}: Readonly<{ children: React.ReactNode; initialTheme: Theme }>) {
+  const [theme, setThemeState] = useState<Theme>(() => initialTheme);
 
   useEffect(() => {
     setStoredTheme(theme);

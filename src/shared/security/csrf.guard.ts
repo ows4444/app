@@ -11,15 +11,19 @@ export async function assertValidCsrf() {
   const encoded = cookieStore.get("csrf")?.value;
   const header = headerStore.get(CSRF_HEADER);
 
-  if (!encoded || !header) {
-    throw new Error("CSRF_MISSING");
+  if (!encoded) {
+    throw new Error("CSRF_COOKIE_MISSING");
+  }
+
+  if (!header) {
+    throw new Error("CSRF_HEADER_MISSING");
   }
 
   const valid = verifyCsrf(encoded);
   const payload = decode(encoded);
 
   if (!valid || !payload) {
-    throw new Error("CSRF_INVALID");
+    throw new Error("CSRF_INVALID_OR_EXPIRED");
   }
 
   const same = timingSafeEqual(payload.token, header);

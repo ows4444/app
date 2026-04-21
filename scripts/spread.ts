@@ -18,7 +18,7 @@ function getInputFiles(): string[] {
   return fs
     .readdirSync(ROOT_DIR)
     .filter((f) => f.startsWith(OUTPUT_PREFIX) && f.endsWith(".md"))
-    .sort()
+    .sort((a, b) => a.localeCompare(b))
     .map((f) => path.join(ROOT_DIR, f));
 }
 
