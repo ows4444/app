@@ -1,7 +1,10 @@
-export function getCookie<T = string>(name: string): T | null {
+export function getCookie(name: string): string | null {
   if (typeof document === "undefined") return null;
 
-  const match = RegExp(new RegExp("(^| )" + name + "=([^;]+)")).exec(document.cookie);
-
-  return match ? (match[2] as unknown as T) : null;
+  return (
+    document.cookie
+      .split("; ")
+      .map((c) => c.split("="))
+      .find(([key]) => key === name)?.[1] ?? null
+  );
 }

@@ -25,7 +25,7 @@ export function NetworkIndicator() {
 
   if (!isOnline) {
     return (
-      <div className="fixed top-0 z-[9999] w-full bg-red-500 p-2 text-center text-white text-sm">You are offline</div>
+      <div className="fixed top-0 z-[9999] w-full bg-red-500 p-2 text-center text-sm text-white">You are offline</div>
     );
   }
 

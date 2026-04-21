@@ -7,6 +7,7 @@ import reactPlugin from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
 import security from "eslint-plugin-security";
 import sonarjs from "eslint-plugin-sonarjs";
+import prettierPlugin from "eslint-plugin-prettier";
 import unusedImports from "eslint-plugin-unused-imports";
 import { defineConfig, globalIgnores } from "eslint/config";
 import { resolve } from "path";
@@ -24,6 +25,14 @@ const IMPORT_RULES = {
       groups: ["builtin", "external", "internal", ["parent", "sibling", "index"], "type"],
       "newlines-between": "always",
       alphabetize: { order: "asc", caseInsensitive: true },
+      pathGroups: [
+        {
+          pattern: "next/**",
+          group: "external",
+          position: "before",
+        },
+      ],
+      pathGroupsExcludedImportTypes: ["external"],
     },
   ],
   "import/consistent-type-specifier-style": ["error", "prefer-inline"],
@@ -116,6 +125,7 @@ const SPACING_RULES = {
 
 const GENERAL_RULES = {
   "no-console": ["warn", { allow: ["warn", "error"] }],
+  "prettier/prettier": "error",
   "no-var": "error",
   "prefer-const": "error",
   "object-shorthand": ["error", "always"],
@@ -327,6 +337,7 @@ export default defineConfig([
       react: reactPlugin,
       "react-hooks": reactHooks,
       "unused-imports": unusedImports,
+      prettier: prettierPlugin,
       security,
       sonarjs,
     },
