@@ -3,7 +3,11 @@
 import { useEffect, useState } from "react";
 
 export function NetworkIndicator() {
-  const [isOnline, setIsOnline] = useState(true);
+  const [isOnline, setIsOnline] = useState(() => {
+    if (typeof navigator === "undefined") return true;
+
+    return navigator.onLine;
+  });
 
   useEffect(() => {
     if (typeof navigator === "undefined") return;

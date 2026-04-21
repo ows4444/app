@@ -1,9 +1,8 @@
 import "./globals.css";
 
 import { type Metadata } from "next";
-import { cookies } from "next/headers";
 import { NextIntlClientProvider } from "next-intl";
-import { getMessages } from "next-intl/server";
+import { getLocale, getMessages } from "next-intl/server";
 
 import { Providers } from "@/app/providers";
 import { decode, verifyCsrf } from "@/shared/security/csrf.server";
@@ -16,10 +15,9 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: { readonly children: React.ReactNode }) {
   const initialTheme = await getServerTheme();
-  const locale: string = "en";
-
-  const cookieStore = await cookies();
+  const locale = await getLocale();
   const messages = await getMessages();
+  const cookieStore = await import("next/headers").then((m) => m.cookies());
 
   const encoded = cookieStore.get("csrf")?.value;
   const payload = encoded && verifyCsrf(encoded) ? decode(encoded) : null;
@@ -27,7 +25,7 @@ export default async function RootLayout({ children }: { readonly children: Reac
   return (
     <html lang={locale} dir={locale === "ar" ? "rtl" : "ltr"}>
       <body>
-        <NextIntlClientProvider messages={messages} locale={locale}>
+        <NextIntlClientProvider locale={locale} messages={messages}>
           <Providers initialTheme={initialTheme} csrfToken={payload?.token ?? null}>
             {children}
           </Providers>
