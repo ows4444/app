@@ -1,10 +1,12 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useMemo } from "react";
-import { Toaster } from "react-hot-toast";
 
 import { useTheme } from "@/providers/theme-provider";
 import { getToastOptions } from "@/shared/ui/toast/toast.config";
+
+const Toaster = dynamic(() => import("react-hot-toast").then((m) => m.Toaster), { ssr: false });
 
 export function ToastProvider({ children }: { readonly children: React.ReactNode }) {
   const { theme } = useTheme();
