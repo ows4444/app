@@ -1,4 +1,4 @@
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 
 import { z } from "zod";
 
@@ -26,9 +26,16 @@ export const POST = createMutation(async (req) => {
     return Response.json({ error: "INVALID_INPUT" }, { status: 400 });
   }
 
+  const headerStore = await headers();
+
   const upstream = await serviceClient<unknown>("AUTH", "/auth/login", {
     method: "POST",
     body: JSON.stringify(parsed.data),
+    headers: {
+      "x-request-id": headerStore.get("x-request-id") ?? "",
+      "x-csrf-token": headerStore.get("x-csrf-token") ?? "",
+      cookie: headerStore.get("cookie") ?? "",
+    },
   });
 
   const raw = upstream;

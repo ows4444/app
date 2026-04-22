@@ -34,6 +34,7 @@ export async function serviceClient<T>(service: ServiceName, path: string, optio
         ...(traceId ? { "x-request-id": traceId } : {}),
       },
       cache: "no-store",
+      signal: AbortSignal.timeout(5000), // 5 seconds timeout
     });
 
     if (!res.ok) {
