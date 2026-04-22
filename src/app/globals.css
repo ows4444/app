@@ -1,12 +1,97 @@
 @import "tailwindcss";
 
-/* your tokens */
 :root {
-  --background: #698061;
-  --foreground: #171717;
+  /* Core palette */
+  --color-bg: 255 255 255;
+  --color-fg: 15 23 42;
+
+  --color-muted: 241 245 249;
+  --color-muted-fg: 100 116 139;
+
+  --color-primary: 59 130 246;
+  --color-primary-fg: 255 255 255;
+
+  --color-danger: 239 68 68;
+  --color-danger-fg: 255 255 255;
+
+  --color-border: 226 232 240;
+
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.08);
+}
+
+.dark {
+  --color-bg: 2 6 23;
+  --color-fg: 241 245 249;
+
+  --color-muted: 15 23 42;
+  --color-muted-fg: 148 163 184;
+
+  --color-primary: 96 165 250;
+  --color-primary-fg: 2 6 23;
+
+  --color-danger: 248 113 113;
+  --color-danger-fg: 2 6 23;
+
+  --color-border: 30 41 59;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: rgb(var(--color-bg));
+  color: rgb(var(--color-fg));
+  font-feature-settings:
+    "rlig" 1,
+    "calt" 1;
+}
+
+/* smooth theme transition */
+* {
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+@layer utilities {
+  .bg-base {
+    background-color: rgb(var(--color-bg));
+  }
+
+  .text-base {
+    color: rgb(var(--color-fg));
+  }
+
+  .bg-muted {
+    background-color: rgb(var(--color-muted));
+  }
+
+  .text-muted {
+    color: rgb(var(--color-muted-fg));
+  }
+
+  .bg-primary {
+    background-color: rgb(var(--color-primary));
+  }
+
+  .text-primary {
+    color: rgb(var(--color-primary));
+  }
+
+  .border-base {
+    border-color: rgb(var(--color-border));
+  }
+
+  .rounded-base {
+    border-radius: var(--radius-md);
+  }
+
+  .shadow-base {
+    box-shadow: var(--shadow-sm);
+  }
 }

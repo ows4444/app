@@ -1,12 +1,14 @@
 import pino from "pino";
 
-const isProd = process.env.NODE_ENV === "production";
+import { env } from "@/config/env";
+
+const isProd = env.NODE_ENV === "production";
 
 export const baseLogger = pino({
-  level: process.env.LOG_LEVEL ?? (isProd ? "info" : "debug"),
+  level: env.LOG_LEVEL ?? (isProd ? "info" : "debug"),
 
   base: {
-    env: process.env.NODE_ENV,
+    env: env.NODE_ENV,
     service: "web-app",
   },
 

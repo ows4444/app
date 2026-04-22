@@ -1,7 +1,7 @@
 import { baseLogger } from "./logger.server";
 import { serializeMeta } from "./serializer";
 
-export function withContext(baseCtx: Record<string, unknown>) {
+function withContext(baseCtx: Record<string, unknown>) {
   const logger = baseLogger.child(baseCtx);
 
   return {
@@ -22,3 +22,7 @@ export function withContext(baseCtx: Record<string, unknown>) {
     },
   };
 }
+
+export const apiLogger = withContext({ scope: "api" });
+export const appLogger = withContext({ scope: "app" });
+export const routeLogger = withContext({ scope: "route" });

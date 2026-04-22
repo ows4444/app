@@ -1,6 +1,6 @@
 import "server-only";
 
-import { withContext } from "@/shared/infra/logger/with-context.server";
+import { apiLogger } from "@/shared/infra/logger/with-context.server";
 import { getServerRequestContext } from "@/shared/request/request-context.server";
 
 import { executeRequest } from "./api-client.base";
@@ -9,7 +9,6 @@ export async function apiClient<T>(
   path: string,
   options?: RequestInit & { retry?: { retries?: number }; cache?: RequestCache },
 ) {
-  const log = withContext({ scope: "api-client" });
   const ctx = await getServerRequestContext();
 
   const headers: HeadersInit = {
@@ -18,5 +17,5 @@ export async function apiClient<T>(
     ...(ctx?.locale ? { "accept-language": ctx.locale } : {}),
   };
 
-  return executeRequest<T>(path, options, headers, log);
+  return executeRequest<T>(path, options, headers, apiLogger);
 }

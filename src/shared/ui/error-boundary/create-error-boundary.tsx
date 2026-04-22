@@ -1,5 +1,6 @@
 import React from "react";
 
+import { env } from "@/config/env";
 import { normalizeError } from "@/shared/core/errors/normalize";
 
 type FallbackProps = {
@@ -43,7 +44,7 @@ export function createErrorBoundary({ name, fallback }: Options) {
     }
 
     override componentDidCatch(error: unknown, info: React.ErrorInfo) {
-      if (process.env.NODE_ENV !== "production") {
+      if (env.NODE_ENV !== "production") {
         console.error("React ErrorBoundary", normalizeError(error), info);
       }
     }

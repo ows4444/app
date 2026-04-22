@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+
 import { getRequestConfig } from "next-intl/server";
 
 import { defaultLocale, locales } from "./routing";
@@ -15,6 +16,6 @@ export default getRequestConfig(async () => {
 
   return {
     locale,
-    messages: (await import(`../messages/${locale}.json`)).default,
+    messages: (await import(`./messages/${locale}.json`)).default,
   };
 });

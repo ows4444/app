@@ -13,5 +13,7 @@ export async function getServerTheme(): Promise<Theme> {
 
   if (secChPrefersColorScheme === "dark") return "dark";
 
+  if (secChPrefersColorScheme === "light") return "light";
+
   return "light";
 }

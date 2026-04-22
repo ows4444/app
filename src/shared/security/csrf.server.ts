@@ -1,13 +1,11 @@
 import crypto from "crypto";
 import "server-only";
 
+import { env } from "@/config/env";
+
 import { timingSafeEqual } from "./csrf.core";
 
-if (!process.env.CSRF_SECRET) {
-  throw new Error("CSRF_SECRET must be defined");
-}
-
-const CSRF_SECRET = process.env.CSRF_SECRET;
+const CSRF_SECRET = env.CSRF_SECRET;
 
 type CsrfPayload = {
   token: string;

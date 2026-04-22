@@ -1,6 +1,6 @@
 import { type DefaultToastOptions } from "react-hot-toast";
 
-export function getToastOptions(theme: "light" | "dark"): DefaultToastOptions {
+export function getToastOptions(theme: "light" | "dark" | "system"): DefaultToastOptions {
   const isDark = theme === "dark";
 
   const baseStyle = {

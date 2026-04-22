@@ -1,12 +1,12 @@
 import { z } from "zod";
 
-import { apiResponseSchema } from "@/shared/api/api-response";
 import { HttpError } from "@/shared/core/errors";
 import { mapToDomainError } from "@/shared/core/errors/error-mapper";
 import { normalizeError } from "@/shared/core/errors/normalize";
 import { createAbortSignal } from "@/shared/infra/api-client/abort/abort";
-import { shouldRetryError, shouldRetryResponse } from "@/shared/infra/api-client/retry/retry-rules";
 import { type Logger } from "@/shared/infra/logger/contracts/logger";
+
+import { apiResponseSchema } from "./api-response.schema";
 
 type ApiOptions = RequestInit & {
   timeout?: number;
@@ -31,7 +31,7 @@ export async function executeRequest<T>(
 ): Promise<T> {
   const start = Date.now();
 
-  const execOnce = async (): Promise<T> => {
+  const exec = async (): Promise<T> => {
     const base = resolveBaseUrl();
 
     const signal = createAbortSignal({
@@ -65,10 +65,6 @@ export async function executeRequest<T>(
         status: res.status,
         duration: Date.now() - start,
       });
-
-      if (shouldRetryResponse(res.status)) {
-        throw new HttpError(res.status, "RETRYABLE_HTTP_ERROR");
-      }
 
       const contentType = res.headers.get("content-type") ?? "";
 
@@ -106,45 +102,24 @@ export async function executeRequest<T>(
     return text as unknown as T;
   };
 
-  const maxRetries = (options as ApiOptions & { retry?: { retries?: number } })?.retry?.retries ?? 2;
-  let attempt = 0;
+  try {
+    const result = await exec();
 
-  while (true) {
-    try {
-      const result = await execOnce();
-
-      if (process.env.NODE_ENV !== "production") {
-        logger?.info("API success", {
-          path,
-          duration: Date.now() - start,
-          attempt,
-        });
-      }
-
-      return result;
-    } catch (err) {
-      const isRetryable = (err instanceof HttpError && shouldRetryResponse(err.status)) || shouldRetryError(err);
-
-      const method = options.method?.toUpperCase() ?? "GET";
-
-      const isSafeRetry = method === "GET" || method === "HEAD" || method === "OPTIONS";
-
-      if (!isRetryable || !isSafeRetry || attempt >= maxRetries) {
-        logger?.error("API FAILURE (final)", {
-          path,
-          duration: Date.now() - start,
-          attempt,
-          error: normalizeError(err),
-        });
-
-        throw mapToDomainError(err);
-      }
-
-      attempt++;
-
-      const backoff = 200 * Math.pow(2, attempt); // exponential backoff
-
-      await new Promise((r) => setTimeout(r, backoff));
+    if (process.env.NODE_ENV !== "production") {
+      logger?.info("API success", {
+        path,
+        duration: Date.now() - start,
+      });
     }
+
+    return result;
+  } catch (err) {
+    logger?.error("API FAILURE", {
+      path,
+      duration: Date.now() - start,
+      error: normalizeError(err),
+    });
+
+    throw mapToDomainError(err);
   }
 }

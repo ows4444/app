@@ -1,4 +1,4 @@
-export type Theme = "light" | "dark";
+export type Theme = "light" | "dark" | "system";
 
 export type ThemeContextValue = {
   theme: Theme;
@@ -29,7 +29,9 @@ export function applyThemeToDOM(theme: Theme) {
 
   const root = document.documentElement;
 
-  if (theme === "dark") root.classList.add("dark");
+  const resolved = theme === "system" ? getSystemTheme() : theme;
+
+  if (resolved === "dark") root.classList.add("dark");
   else root.classList.remove("dark");
 }
 
@@ -37,4 +39,11 @@ export function getSystemTheme(): Theme {
   if (typeof window === "undefined") return "light";
 
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
+export function getPreferredTheme(): Theme {
+  const stored = getStoredTheme();
+  if (stored) return stored;
+
+  return getSystemTheme();
 }

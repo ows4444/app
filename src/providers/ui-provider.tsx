@@ -1,7 +1,8 @@
 "use client";
 
-import { useIsFetching, useIsMutating } from "@tanstack/react-query";
 import { useMemo } from "react";
+
+import { useIsFetching, useIsMutating } from "@tanstack/react-query";
 
 import { ScreenLoader } from "@/shared/ui/organisms/screen-loader";
 

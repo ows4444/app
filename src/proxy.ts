@@ -3,8 +3,15 @@ import { type NextRequest, NextResponse } from "next/server";
 import { buildCSP } from "@/shared/security/csp";
 import { decode, generateCsrfToken } from "@/shared/security/csrf.server";
 
+import { env } from "./config/env";
+import { verifySession } from "./shared/security/session.server";
+
 export function proxy(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
+
+  const session = req.cookies.get("session")?.value;
+  const payload = verifySession(session);
+  const user = payload?.user ?? null;
 
   const nonce = crypto.randomUUID().replace(/-/g, "");
   const csp = buildCSP(nonce);
@@ -27,9 +34,9 @@ export function proxy(req: NextRequest) {
     requestHeaders.set("x-request-id", crypto.randomUUID());
   }
 
-  const hasSessionCookie = req.cookies.has("session") || req.cookies.has("auth") || req.cookies.has("token");
+  const headers = new Headers(req.headers);
 
-  requestHeaders.set("x-auth-hint", hasSessionCookie ? "1" : "0");
+  headers.set("x-user", user ? JSON.stringify(user) : "");
 
   const response = NextResponse.next({
     request: {
@@ -54,7 +61,7 @@ export function proxy(req: NextRequest) {
     response.cookies.set("csrf", encoded, {
       httpOnly: true,
       sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
+      secure: env.NODE_ENV === "production",
       path: "/",
     });
   }
@@ -64,7 +71,7 @@ export function proxy(req: NextRequest) {
       path: "/",
       sameSite: "lax",
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: env.NODE_ENV === "production",
     });
   }
 

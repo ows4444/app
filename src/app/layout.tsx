@@ -1,5 +1,7 @@
 import "./globals.css";
 
+import { cookies } from "next/headers";
+
 import { type Metadata } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
@@ -17,7 +19,7 @@ export default async function RootLayout({ children }: { readonly children: Reac
   const initialTheme = await getServerTheme();
   const locale = await getLocale();
   const messages = await getMessages();
-  const cookieStore = await import("next/headers").then((m) => m.cookies());
+  const cookieStore = await cookies();
 
   const encoded = cookieStore.get("csrf")?.value;
   const payload = encoded && verifyCsrf(encoded) ? decode(encoded) : null;

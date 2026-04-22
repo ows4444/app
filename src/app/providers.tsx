@@ -1,5 +1,8 @@
+"use client";
+
 import ClientProviders from "@/providers/providers.client";
 import { ThemeProvider } from "@/providers/theme-provider";
+import { type Theme } from "@/shared/theme";
 
 export function Providers({
   children,
@@ -7,7 +10,7 @@ export function Providers({
   csrfToken,
 }: Readonly<{
   children: React.ReactNode;
-  initialTheme: "light" | "dark";
+  initialTheme: Theme;
   csrfToken: string | null;
 }>) {
   return (

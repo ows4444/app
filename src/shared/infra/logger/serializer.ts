@@ -1,6 +1,7 @@
+/* eslint-disable security/detect-object-injection */
 import { normalizeError } from "@/shared/core/errors/normalize";
 
-export function serializeMeta(meta?: Record<string, unknown>) {
+export function serializeMeta(meta?: Record<string, unknown>): Record<string, unknown> | undefined {
   if (!meta) return undefined;
 
   const result: Record<string, unknown> = {};

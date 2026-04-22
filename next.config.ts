@@ -5,6 +5,7 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const nextConfig: NextConfig = {
   transpilePackages: ["@t3-oss/env-nextjs", "@t3-oss/env-core"],
+  typedRoutes: true,
   headers() {
     return [
       {
@@ -26,7 +27,6 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  typedRoutes: true,
 };
 
 export default withNextIntl(nextConfig);

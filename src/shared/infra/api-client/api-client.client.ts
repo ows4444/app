@@ -1,4 +1,4 @@
-import { withContext } from "@/shared/infra/logger/with-context.client";
+import { apiLogger } from "@/shared/infra/logger/with-context.client";
 import { getClientRequestContext } from "@/shared/request/request-context.client";
 import { getCsrfToken } from "@/shared/security/csrf.client";
 
@@ -9,7 +9,6 @@ export async function apiClient<T>(
   options?: RequestInit & { retry?: { retries?: number }; cache?: RequestCache },
 ) {
   const ctx = getClientRequestContext();
-  const log = withContext({ scope: "api-client" });
 
   const csrfToken = getCsrfToken();
 
@@ -19,5 +18,5 @@ export async function apiClient<T>(
     ...(csrfToken ? { "x-csrf-token": csrfToken } : {}),
   };
 
-  return executeRequest<T>(path, options, headers, log);
+  return executeRequest<T>(path, options, headers, apiLogger);
 }

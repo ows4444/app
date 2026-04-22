@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { env } from "@/config/env";
 import { isSafeMethod } from "@/shared/security/csrf.core";
 import { assertValidCsrf } from "@/shared/security/csrf.guard";
 import { decode, generateCsrfToken } from "@/shared/security/csrf.server";
@@ -39,7 +40,7 @@ export function createMutation(handler: AppRouteHandler): AppRouteHandler {
       next.cookies.set("csrf", encoded, {
         httpOnly: true,
         sameSite: "lax",
-        secure: process.env.NODE_ENV === "production",
+        secure: env.NODE_ENV === "production",
         path: "/",
       });
 
