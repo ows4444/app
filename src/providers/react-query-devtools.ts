@@ -1,7 +1,6 @@
-import { env } from "@/config/env";
+import { env } from "@/config/server/env";
 
-/* eslint-disable @typescript-eslint/no-require-imports */
 export const Devtools =
   env.NODE_ENV === "development"
-    ? require("./react-query-devtools.dev").Devtools
-    : require("./react-query-devtools.prod").Devtools;
+    ? (await import("./react-query-devtools.dev")).Devtools
+    : (await import("./react-query-devtools.prod")).Devtools;

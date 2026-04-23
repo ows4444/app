@@ -1,18 +1,6 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+import React from "react";
 
-import { verifySession } from "@/shared/security/session.server";
-
-export default async function ProtectedLayout({ children }: { readonly children: React.ReactNode }) {
-  const cookieStore = await cookies();
-  const session = cookieStore.get("session")?.value;
-
-  const payload = verifySession(session);
-  const user = payload?.user;
-
-  if (!user) {
-    redirect("/login");
-  }
-
+export const runtime = "nodejs";
+export default function ProtectedLayout({ children }: { readonly children: React.ReactNode }) {
   return <>{children}</>;
 }

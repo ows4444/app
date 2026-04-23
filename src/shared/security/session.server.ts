@@ -1,6 +1,6 @@
 import crypto from "crypto";
 
-import { env } from "@/config/env";
+import { env } from "@/config/server/env";
 import "server-only";
 
 const SECRET = env.SESSION_SECRET;

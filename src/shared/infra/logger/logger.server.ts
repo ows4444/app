@@ -1,6 +1,6 @@
 import pino from "pino";
 
-import { env } from "@/config/env";
+import { env } from "@/config/server/env";
 
 const isProd = env.NODE_ENV === "production";
 

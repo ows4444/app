@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import "server-only";
 
-import { env } from "@/config/env";
+import { env } from "@/config/server/env";
 
 import { timingSafeEqual } from "./csrf.core";
 

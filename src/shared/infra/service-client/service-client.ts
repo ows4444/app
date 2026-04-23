@@ -2,7 +2,7 @@ import "server-only";
 
 import { headers } from "next/headers";
 
-import { env } from "@/config/env";
+import { env } from "@/config/server/env";
 import { mapToDomainError } from "@/shared/core/errors/error-mapper";
 import { normalizeError } from "@/shared/core/errors/normalize";
 import { apiLogger } from "@/shared/infra/logger/with-context.server";

@@ -2,6 +2,8 @@ import { cookies, headers } from "next/headers";
 
 import { z } from "zod";
 
+export const runtime = "nodejs";
+
 import { serviceClient } from "@/shared/infra/service-client/service-client";
 import { createSession } from "@/shared/security/session.server";
 import { createMutation } from "@/shared/server/route/create-route";
@@ -33,7 +35,6 @@ export const POST = createMutation(async (req) => {
     body: JSON.stringify(parsed.data),
     headers: {
       "x-request-id": headerStore.get("x-request-id") ?? "",
-      "x-csrf-token": headerStore.get("x-csrf-token") ?? "",
       cookie: headerStore.get("cookie") ?? "",
     },
   });

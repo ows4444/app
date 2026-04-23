@@ -1,6 +1,7 @@
+import { cookies, headers } from "next/headers";
 import "./globals.css";
 
-import { cookies } from "next/headers";
+export const runtime = "nodejs";
 
 import { type Metadata } from "next";
 import { NextIntlClientProvider } from "next-intl";
@@ -16,19 +17,50 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: { readonly children: React.ReactNode }) {
+  const headerStore = await headers();
+  const nonce = headerStore.get("x-nonce") ?? null;
   const initialTheme = await getServerTheme();
   const locale = await getLocale();
   const messages = await getMessages();
   const cookieStore = await cookies();
+  const brand = "default";
+  const themeScript = `
+      (function() {
+        try {
+          var stored = localStorage.getItem("theme");
+
+          var theme = stored;
+
+          if (!theme || theme === "system") {
+            var systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+            theme = systemDark ? "dark" : "light";
+          }
+          if (theme === "dark") {
+            document.documentElement.classList.add("dark");
+          } else {
+            document.documentElement.classList.remove("dark");
+          }
+        } catch (e) {}
+      })();
+  `;
 
   const encoded = cookieStore.get("csrf")?.value;
   const payload = encoded && verifyCsrf(encoded) ? decode(encoded) : null;
 
   return (
-    <html lang={locale} dir={locale === "ar" ? "rtl" : "ltr"}>
+    <html
+      suppressHydrationWarning
+      lang={locale}
+      dir={locale === "ar" ? "rtl" : "ltr"}
+      data-brand={brand}
+      className={initialTheme === "dark" ? "dark" : undefined}
+    >
       <body>
+        <script nonce={nonce ?? undefined} suppressHydrationWarning dangerouslySetInnerHTML={{ __html: themeScript }} />
+
+        {/* <ExternalScript src="https://www.google.com/recaptcha/api.js" nonce={nonce} /> */}
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <Providers initialTheme={initialTheme} csrfToken={payload?.token ?? null}>
+          <Providers initialTheme={initialTheme} csrfToken={payload?.token ?? null} nonce={nonce}>
             {children}
           </Providers>
         </NextIntlClientProvider>

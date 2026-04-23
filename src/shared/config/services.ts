@@ -1,4 +1,4 @@
-import { env } from "@/config/env";
+import { env } from "@/config/server/env";
 
 export const SERVICES = {
   AUTH: env.AUTH_SERVICE_URL,

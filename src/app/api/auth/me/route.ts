@@ -3,6 +3,8 @@ import { cookies } from "next/headers";
 import { verifySession } from "@/shared/security/session.server";
 import { createQuery } from "@/shared/server/route/create-route";
 
+export const runtime = "nodejs";
+
 function getUserFromSession(session?: string) {
   try {
     if (!session) return null;

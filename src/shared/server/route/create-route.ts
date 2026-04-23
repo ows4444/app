@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { env } from "@/config/env";
+import { env } from "@/config/server/env";
 import { isSafeMethod } from "@/shared/security/csrf.core";
 import { assertValidCsrf } from "@/shared/security/csrf.guard";
 import { decode, generateCsrfToken } from "@/shared/security/csrf.server";

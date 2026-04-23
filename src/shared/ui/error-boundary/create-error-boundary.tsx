@@ -1,6 +1,6 @@
 import React from "react";
 
-import { env } from "@/config/env";
+import { env } from "@/config/server/env";
 import { normalizeError } from "@/shared/core/errors/normalize";
 
 type FallbackProps = {
