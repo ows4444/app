@@ -23,6 +23,7 @@ export async function serviceClient<T>(service: ServiceName, path: string, optio
 
   try {
     const headerStore = await headers();
+    const csrf = headerStore.get("x-csrf-token");
 
     const traceId = headerStore.get("x-request-id");
 
@@ -32,6 +33,7 @@ export async function serviceClient<T>(service: ServiceName, path: string, optio
         "Content-Type": "application/json",
         ...(options.headers ?? {}),
         ...(traceId ? { "x-request-id": traceId } : {}),
+        ...(csrf ? { "x-csrf-token": csrf } : {}),
       },
       cache: "no-store",
       signal: AbortSignal.timeout(5000), // 5 seconds timeout
