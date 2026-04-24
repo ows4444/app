@@ -8,7 +8,7 @@ import { z } from "zod";
 
 import { useLoginHandler } from "@/features/auth/hooks/use-login";
 import { resolvePostLoginRoute } from "@/features/auth/model/auth.routes";
-import { toastService } from "@/shared/ui/toast/toast.service";
+import { emitNotification } from "@/shared/notifications/model/service";
 
 const schema = z.object({
   identifier: z.union([z.email(), z.string().regex(/^9715\d{8}$/)], {
@@ -41,7 +41,7 @@ export default function LoginPage() {
 
       router.replace(route);
     } catch {
-      await toastService.error("Invalid username or password");
+      emitNotification({ type: "AUTH_LOGIN_FAILED" });
     }
   }
 

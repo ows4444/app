@@ -13,16 +13,6 @@ type ApiOptions = RequestInit & {
   signal?: AbortSignal | null;
 };
 
-function resolveBaseUrl() {
-  if (typeof window !== "undefined") return "/api";
-
-  const base =
-    process.env.NEXT_PUBLIC_APP_URL ??
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
-
-  return base.endsWith("/api") ? base : `${base}/api`;
-}
-
 export async function executeRequest<T>(
   path: string,
   options: ApiOptions = {},
@@ -32,7 +22,7 @@ export async function executeRequest<T>(
   const start = Date.now();
 
   const exec = async (): Promise<T> => {
-    const base = resolveBaseUrl();
+    const base = "";
 
     const signal = createAbortSignal({
       ...(options.signal !== undefined && {
@@ -99,7 +89,7 @@ export async function executeRequest<T>(
 
     const text = await res.text();
 
-    return text as unknown as T;
+    return text as T;
   };
 
   try {

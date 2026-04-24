@@ -1,3 +1,5 @@
+import { resolveTheme } from "./resolve-theme";
+
 export type Theme = "light" | "dark" | "system";
 
 export type ThemeContextValue = {
@@ -21,29 +23,12 @@ export function setStoredTheme(theme: Theme) {
 
   localStorage.setItem(THEME_STORAGE_KEY, theme);
 
-  document.cookie = `theme=${theme}; path=/; max-age=31536000; SameSite=Lax`;
-}
-
-export function applyThemeToDOM(theme: Theme) {
-  if (typeof document === "undefined") return;
-
-  const root = document.documentElement;
-
-  const resolved = theme === "system" ? getSystemTheme() : theme;
-
-  if (resolved === "dark") root.classList.add("dark");
-  else root.classList.remove("dark");
-}
-
-export function getSystemTheme(): Theme {
-  if (typeof window === "undefined") return "light";
-
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  document.cookie = `theme=${theme}; path=/; max-age=31536000; SameSite=Lax; Secure`;
 }
 
 export function getPreferredTheme(): Theme {
   const stored = getStoredTheme();
   if (stored) return stored;
 
-  return getSystemTheme();
+  return resolveTheme("system");
 }

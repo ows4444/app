@@ -1,12 +1,21 @@
-import { cookies } from "next/headers";
-
-import { verifySession } from "@/shared/security/session.server";
+import { serviceClient } from "@/shared/infra/service-client/service-client";
 
 export async function getUser() {
-  const cookieStore = await cookies();
-  const session = cookieStore.get("session")?.value;
+  try {
+    const res = await serviceClient<{ user: { id: string; full_name: string } }>("AUTH", "/auth/me", {
+      method: "GET",
+    });
 
-  const payload = verifySession(session);
+    return res.data.user ?? null;
+  } catch (err) {
+    if (
+      err instanceof Error &&
+      typeof (err as { status?: unknown }).status === "number" &&
+      (err as { status?: number }).status === 401
+    ) {
+      return null;
+    }
 
-  return payload?.user ?? null;
+    throw err;
+  }
 }

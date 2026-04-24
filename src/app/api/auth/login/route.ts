@@ -1,12 +1,11 @@
-import { cookies, headers } from "next/headers";
+import { headers } from "next/headers";
 
 import { z } from "zod";
 
 export const runtime = "nodejs";
 
 import { serviceClient } from "@/shared/infra/service-client/service-client";
-import { createSession } from "@/shared/security/session.server";
-import { createMutation } from "@/shared/server/route/create-route";
+import { createValidatedMutation, extractUpstreamError } from "@/shared/server/route/create-route";
 
 const loginSchema = z.object({
   identifier: z.union([z.email(), z.string().regex(/^9715\d{8}$/)], {
@@ -14,65 +13,36 @@ const loginSchema = z.object({
   }),
 });
 
-const userSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-});
-
-export const POST = createMutation(async (req) => {
-  const body = await req.json();
-
-  const parsed = loginSchema.safeParse(body);
-
-  if (!parsed.success) {
-    return Response.json({ error: "INVALID_INPUT" }, { status: 400 });
-  }
-
+export const POST = createValidatedMutation(loginSchema, async (parsed) => {
   const headerStore = await headers();
 
   const upstream = await serviceClient<unknown>("AUTH", "/auth/login", {
     method: "POST",
-    body: JSON.stringify(parsed.data),
+    body: JSON.stringify(parsed),
     headers: {
       "x-request-id": headerStore.get("x-request-id") ?? "",
-      cookie: headerStore.get("cookie") ?? "",
     },
   });
 
-  const raw = upstream;
+  const error = extractUpstreamError(upstream.data);
 
-  const userParsed = userSchema.safeParse(raw);
-
-  if (!userParsed.success) {
-    return Response.json({ error: "INVALID_AUTH_RESPONSE" }, { status: 500 });
+  if (error) {
+    return Response.json({ error }, { status: upstream.status });
   }
 
-  const user = userParsed.data;
-
-  const session = createSession({
-    id: user.id,
-    name: user.name,
+  const res = Response.json(upstream.data, {
+    status: upstream.status,
+    statusText: upstream.statusText,
   });
 
-  const cookieStore = await cookies();
+  const raw = upstream.headers as unknown as { raw?: () => Record<string, string[]> };
+  const cookies = raw?.raw?.()["set-cookie"];
 
-  cookieStore.set("session", session, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24, // ✅ 24h
-  });
+  if (cookies) {
+    for (const cookie of cookies) {
+      res.headers.append("set-cookie", cookie);
+    }
+  }
 
-  return Response.json({
-    data: {
-      user: {
-        id: user.id,
-        full_name: user.name,
-      },
-    },
-    meta: {
-      nextStep: "authenticated",
-    },
-  });
+  return res;
 });

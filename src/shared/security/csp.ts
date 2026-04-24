@@ -35,6 +35,7 @@ export function buildCSP(nonce: string) {
     "object-src 'none'",
 
     "upgrade-insecure-requests",
+    "report-uri /api/csp-report",
 
     ...(isDev ? [] : ["require-trusted-types-for 'script'", "trusted-types nextjs nextjs#bundler"]),
   ].join("; ");

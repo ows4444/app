@@ -9,6 +9,7 @@ import { getLocale, getMessages } from "next-intl/server";
 
 import { Providers } from "@/app/providers";
 import { decode, verifyCsrf } from "@/shared/security/csrf.server";
+import { ThemeScript } from "@/shared/theme/theme-script";
 import { getServerTheme } from "@/shared/theme/theme.server";
 
 export const metadata: Metadata = {
@@ -24,25 +25,6 @@ export default async function RootLayout({ children }: { readonly children: Reac
   const messages = await getMessages();
   const cookieStore = await cookies();
   const brand = "default";
-  const themeScript = `
-      (function() {
-        try {
-          var stored = localStorage.getItem("theme");
-
-          var theme = stored;
-
-          if (!theme || theme === "system") {
-            var systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-            theme = systemDark ? "dark" : "light";
-          }
-          if (theme === "dark") {
-            document.documentElement.classList.add("dark");
-          } else {
-            document.documentElement.classList.remove("dark");
-          }
-        } catch (e) {}
-      })();
-  `;
 
   const encoded = cookieStore.get("csrf")?.value;
   const payload = encoded && verifyCsrf(encoded) ? decode(encoded) : null;
@@ -56,7 +38,7 @@ export default async function RootLayout({ children }: { readonly children: Reac
       className={initialTheme === "dark" ? "dark" : undefined}
     >
       <body>
-        <script nonce={nonce ?? undefined} suppressHydrationWarning dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <ThemeScript nonce={nonce} />
 
         {/* <ExternalScript src="https://www.google.com/recaptcha/api.js" nonce={nonce} /> */}
         <NextIntlClientProvider locale={locale} messages={messages}>

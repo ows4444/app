@@ -1,6 +1,8 @@
 import { QueryCache, QueryClient } from "@tanstack/react-query";
 
 import { isAppError } from "@/shared/core/errors";
+import { mapErrorToEvent } from "@/shared/notifications/model/error-to-event";
+import { emitNotification } from "@/shared/notifications/model/service";
 
 export function createQueryClient() {
   return new QueryClient({
@@ -21,7 +23,7 @@ export function createQueryClient() {
             return failureCount < 2;
           }
 
-          return failureCount < 1; // unknown errors → conservative
+          return failureCount < 1;
         },
 
         refetchOnWindowFocus: false,
@@ -29,8 +31,15 @@ export function createQueryClient() {
       },
       mutations: {
         networkMode: "online",
+        onError: (error) => {
+          emitNotification(mapErrorToEvent(error));
+        },
       },
     },
-    queryCache: new QueryCache({}),
+    queryCache: new QueryCache({
+      onError: (error) => {
+        emitNotification(mapErrorToEvent(error));
+      },
+    }),
   });
 }

@@ -3,6 +3,7 @@ import "server-only";
 import { headers } from "next/headers";
 
 import { env } from "@/config/server/env";
+import { HttpError } from "@/shared/core/errors";
 import { mapToDomainError } from "@/shared/core/errors/error-mapper";
 import { normalizeError } from "@/shared/core/errors/normalize";
 import { apiLogger } from "@/shared/infra/logger/with-context.server";
@@ -18,11 +19,18 @@ function resolveServiceUrl(service: ServiceName) {
   }
 }
 
-export async function serviceClient<T>(service: ServiceName, path: string, options: RequestInit = {}): Promise<T> {
+export async function serviceClient<T>(
+  service: ServiceName,
+  path: string,
+  options: RequestInit = {},
+): Promise<{ data: T; headers: Headers; status: number; statusText: string }> {
   const start = Date.now();
 
   try {
     const headerStore = await headers();
+
+    const cookie = headerStore.get("cookie");
+
     const csrf = headerStore.get("x-csrf-token");
 
     const traceId = headerStore.get("x-request-id");
@@ -34,14 +42,14 @@ export async function serviceClient<T>(service: ServiceName, path: string, optio
         ...(options.headers ?? {}),
         ...(traceId ? { "x-request-id": traceId } : {}),
         ...(csrf ? { "x-csrf-token": csrf } : {}),
+        ...(cookie ? { cookie } : {}),
       },
-      cache: "no-store",
       signal: AbortSignal.timeout(5000), // 5 seconds timeout
     });
 
-    if (!res.ok) {
-      const text = await res.text();
+    const contentType = res.headers.get("content-type") ?? "";
 
+    if (!res.ok) {
       apiLogger.error("SERVICE_ERROR", {
         service,
         path,
@@ -49,10 +57,29 @@ export async function serviceClient<T>(service: ServiceName, path: string, optio
         duration: Date.now() - start,
       });
 
-      throw new Error(text || "SERVICE_ERROR");
+      if (contentType.includes("application/json")) {
+        const json = await res.json().catch(() => null);
+        throw new HttpError(res.status, json?.message ?? "SERVICE_ERROR");
+      }
+
+      const text = await res.text();
+      throw new HttpError(res.status, text || "SERVICE_ERROR");
     }
 
-    return await res.json();
+    let data: unknown;
+
+    if (contentType.includes("application/json")) {
+      data = await res.json();
+    } else {
+      data = await res.text();
+    }
+
+    return {
+      data: data as T,
+      headers: res.headers,
+      status: res.status,
+      statusText: res.statusText,
+    };
   } catch (err) {
     apiLogger.error("SERVICE_FAILURE", {
       service,

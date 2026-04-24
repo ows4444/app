@@ -1,7 +1,5 @@
 import { redirect } from "next/navigation";
 
-import { Suspense } from "react";
-
 import { getUser } from "@/shared/server/auth/get-user";
 
 export default async function DashboardPage() {
@@ -11,11 +9,5 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  return (
-    <>
-      <Suspense fallback={<p> suspense </p>}>
-        <p>dashboard page</p>
-      </Suspense>
-    </>
-  );
+  return <p>dashboard page</p>;
 }

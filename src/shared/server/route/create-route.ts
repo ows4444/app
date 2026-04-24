@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+import { type z } from "zod";
+
 import { env } from "@/config/server/env";
 import { isSafeMethod } from "@/shared/security/csrf.core";
 import { assertValidCsrf } from "@/shared/security/csrf.guard";
@@ -7,11 +9,57 @@ import { decode, generateCsrfToken } from "@/shared/security/csrf.server";
 
 import { type AppRouteHandler } from "./types";
 
+export function createValidatedMutation<T extends z.ZodTypeAny>(
+  schema: T,
+  handler: (data: z.infer<T>, req: Request, ctx: unknown) => Promise<Response>,
+): AppRouteHandler {
+  return createMutation(async (req, ctx) => {
+    const MAX_BODY_SIZE = 1024 * 10; // 10kb
+
+    const contentLength = req.headers.get("content-length");
+
+    if (contentLength && Number(contentLength) > MAX_BODY_SIZE) {
+      return NextResponse.json({ error: "PAYLOAD_TOO_LARGE" }, { status: 413 });
+    }
+
+    const body = await req.json();
+
+    const parsed = schema.safeParse(body);
+
+    if (!parsed.success) {
+      return NextResponse.json({ error: "INVALID_INPUT" }, { status: 400 });
+    }
+
+    return handler(parsed.data, req, ctx);
+  });
+}
+
+export function extractUpstreamError(data: unknown): string | null {
+  if (
+    typeof data === "object" &&
+    data !== null &&
+    "error" in data &&
+    typeof (data as Record<string, unknown>).error === "string"
+  ) {
+    return (data as { error: string }).error;
+  }
+
+  return null;
+}
+
 // ─────────────────────────────────────────────
 // 🔒 MUTATION (CSRF ENFORCED ALWAYS)
 // ─────────────────────────────────────────────
 export function createMutation(handler: AppRouteHandler): AppRouteHandler {
   return async (req, ctx) => {
+    const MAX_BODY_SIZE = 1024 * 10; // 10kb
+
+    const contentLength = req.headers.get("content-length");
+
+    if (contentLength && Number(contentLength) > MAX_BODY_SIZE) {
+      return NextResponse.json({ error: "PAYLOAD_TOO_LARGE" }, { status: 413 });
+    }
+
     if (!isSafeMethod(req.method)) {
       try {
         await assertValidCsrf(); // ✅ SINGLE SOURCE OF TRUTH

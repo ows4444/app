@@ -1,3 +1,5 @@
+import crypto from "crypto";
+
 import { type NextRequest, NextResponse } from "next/server";
 
 import { env } from "@/config/server/env";
@@ -15,7 +17,7 @@ export function proxy(req: NextRequest) {
       return NextResponse.next();
     }
 
-    const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
+    const nonce = crypto.randomBytes(16).toString("base64");
     const csp = buildCSP(nonce);
 
     const requestHeaders = new Headers(req.headers);
@@ -63,10 +65,8 @@ export function proxy(req: NextRequest) {
     response.headers.set("Cross-Origin-Resource-Policy", "same-origin");
 
     return response;
-  } catch (error) {
-    console.error("Error in proxy middleware:", error);
-
-    return NextResponse.next();
+  } catch {
+    return new NextResponse("Proxy failure", { status: 500 });
   }
 }
 

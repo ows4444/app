@@ -18,5 +18,5 @@ export async function apiClient<T>(
     ...(csrfToken ? { "x-csrf-token": csrfToken } : {}),
   };
 
-  return executeRequest<T>(path, options, headers, apiLogger);
+  return executeRequest<T>(`/api${path}`, options, headers, apiLogger);
 }

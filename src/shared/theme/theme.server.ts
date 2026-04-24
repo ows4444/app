@@ -15,5 +15,5 @@ export async function getServerTheme(): Promise<Theme> {
 
   if (secChPrefersColorScheme === "light") return "light";
 
-  return "light";
+  return cookieTheme ?? "light";
 }
