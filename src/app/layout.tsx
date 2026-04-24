@@ -42,7 +42,7 @@ export default async function RootLayout({ children }: { readonly children: Reac
 
         {/* <ExternalScript src="https://www.google.com/recaptcha/api.js" nonce={nonce} /> */}
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <Providers initialTheme={initialTheme} csrfToken={payload?.token ?? null} nonce={nonce}>
+          <Providers initialTheme={initialTheme} csrfToken={payload?.token ?? null}>
             {children}
           </Providers>
         </NextIntlClientProvider>

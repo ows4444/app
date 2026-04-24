@@ -8,18 +8,14 @@ export function Providers({
   children,
   initialTheme,
   csrfToken,
-  nonce,
 }: Readonly<{
   children: React.ReactNode;
   initialTheme: Theme;
   csrfToken: string | null;
-  nonce: string | null;
 }>) {
   return (
     <ThemeProvider initialTheme={initialTheme}>
-      <ClientProviders csrfToken={csrfToken} nonce={nonce}>
-        {children}
-      </ClientProviders>
+      <ClientProviders csrfToken={csrfToken}>{children}</ClientProviders>
     </ThemeProvider>
   );
 }
