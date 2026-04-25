@@ -12,6 +12,7 @@ type ErrorWithMeta = Error & {
   code?: string;
   meta?: Record<string, unknown>;
 };
+
 export function normalizeError(err: unknown): NormalizedError {
   if (err instanceof Error) {
     const e = err as ErrorWithMeta;
@@ -24,6 +25,7 @@ export function normalizeError(err: unknown): NormalizedError {
       ...(e.meta !== undefined && { meta: e.meta }),
     };
   }
+
   if (err && typeof err === "object") {
     try {
       return {
@@ -35,6 +37,7 @@ export function normalizeError(err: unknown): NormalizedError {
       };
     }
   }
+
   return {
     message: String(err),
   };

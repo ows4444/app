@@ -1,7 +1,9 @@
 import { QueryCache, QueryClient } from "@tanstack/react-query";
-import { isAppError } from "@/shared/core/errors";
+
 import { mapErrorToEvent } from "@/features/notifications/model/error-to-event";
 import { emitNotification } from "@/features/notifications/model/service";
+import { isAppError } from "@/shared/core/errors";
+
 export function createQueryClient() {
   return new QueryClient({
     defaultOptions: {
@@ -13,10 +15,13 @@ export function createQueryClient() {
           if (typeof navigator !== "undefined" && !navigator.onLine) {
             return false;
           }
+
           if (isAppError(error)) {
             if (!error.retryable) return false;
+
             return failureCount < 2;
           }
+
           return failureCount < 1;
         },
         refetchOnWindowFocus: false,

@@ -1,4 +1,5 @@
 import { apiClient } from "@/shared/api/client/api-client";
+
 type LoginPayload = {
   identifier: string;
 };
@@ -21,6 +22,7 @@ type MeResponse = {
     };
   };
 };
+
 export async function loginService(payload: LoginPayload) {
   return apiClient<LoginResponse>("/auth/login", {
     method: "POST",

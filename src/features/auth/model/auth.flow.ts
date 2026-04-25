@@ -1,4 +1,5 @@
 import { type AuthFlow } from "@/shared/types/auth-flow";
+
 export function resolveAuthFlow(meta?: { nextStep?: string }): AuthFlow {
   switch (meta?.nextStep) {
     case "2fa_required":

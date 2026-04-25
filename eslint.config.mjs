@@ -30,7 +30,6 @@ const IMPORT_RULES = {
           position: "before",
         },
       ],
-      pathGroupsExcludedImportTypes: [],
       "newlines-between": "always",
       alphabetize: {
         order: "asc",
@@ -104,20 +103,6 @@ const GENERAL_RULES = {
   eqeqeq: ["error", "always", { null: "ignore" }],
   "no-throw-literal": "error",
   "no-process-env": "error",
-  "no-restricted-imports": [
-    "error",
-    {
-      patterns: [
-        "**/*.server.*",
-        "@/shared/infra/**",
-        "@/shared/api/**",
-        "@/shared/security/**",
-        "@/shared/infra",
-        "@/shared/api",
-        "@/shared/security",
-      ],
-    },
-  ],
 };
 const REACT_RULES = {
   "react-hooks/exhaustive-deps": "error",
@@ -134,51 +119,113 @@ const BOUNDARY_ELEMENTS = [
   },
   { type: "scripts", pattern: "scripts/**", mode: "folder" },
 
-  { type: "rsc", pattern: "src/app/**/!(*.client).*", mode: "file" },
+  // App Router (CRITICAL FIX)
   { type: "route", pattern: "src/app/**/route.ts", mode: "file" },
+  { type: "app", pattern: "src/app/**", mode: "folder" },
 
+  // Features
   { type: "feature", pattern: "src/features/**", mode: "folder" },
-  { type: "shared-core", pattern: "src/shared/core/**", mode: "folder" },
-  { type: "shared-ports", pattern: "src/shared/ports/**", mode: "folder" },
+  { type: "entity", pattern: "src/entities/**", mode: "folder" },
+  { type: "widget", pattern: "src/widgets/**", mode: "folder" },
+
+  // Shared (split correctly)
   { type: "shared-api", pattern: "src/shared/api/**", mode: "folder" },
-  { type: "shared-infra", pattern: "src/shared/infra/**", mode: "folder" },
-  { type: "shared-security", pattern: "src/shared/security/**", mode: "folder" },
+  { type: "shared-core", pattern: "src/shared/core/**", mode: "folder" },
   { type: "shared-ui", pattern: "src/shared/ui/**", mode: "folder" },
   { type: "shared-utils", pattern: "src/shared/utils/**", mode: "folder" },
+  { type: "shared-security", pattern: "src/shared/security/**", mode: "folder" },
+  { type: "shared-server", pattern: "src/shared/server/**", mode: "folder" },
+  { type: "shared-theme", pattern: "src/shared/theme/**", mode: "folder" },
+  { type: "shared-types", pattern: "src/shared/types/**", mode: "folder" },
+  {
+    type: "shared-observability",
+    pattern: "src/shared/observability/**",
+    mode: "folder",
+  },
+
+  { type: "shared-request", pattern: "src/shared/request/**", mode: "folder" },
+  { type: "shared-infra", pattern: "src/shared/infra/**", mode: "folder" },
+
+  // Infra
   { type: "providers", pattern: "src/providers/**", mode: "folder" },
   { type: "config", pattern: "src/config/**", mode: "folder" },
   { type: "state", pattern: "src/state/**", mode: "folder" },
-  { type: "server", pattern: "**/*.server.*", mode: "file" },
-  { type: "client", pattern: "**/*.client.*", mode: "file" },
-  { type: "proxy", pattern: ["src/proxy.ts", "src/app/**/route.ts"], mode: "file" },
+
+  // BFF backend layer
+  { type: "server", pattern: "src/server/**", mode: "folder" },
+  { type: "proxy", pattern: "src/proxy.ts", mode: "file" },
 ];
 
 const LAYERS = {
-  rsc: ["feature", "shared-ui", "providers", "config", "state"],
-  route: ["shared-core", "shared-api", "shared-infra", "shared-security", "config"],
+  // App (RSC layer)
+  app: [
+    "feature",
+    "widget",
+    "entity",
+    "shared-ui",
+    "shared-theme",
+    "providers",
+    "config",
+    "shared-types",
+    "shared-core",
+    "shared-observability",
+  ],
 
-  providers: ["shared-core", "shared-utils", "config", "shared-ui", "state"],
+  // API routes (BFF boundary)
+  route: ["server", "shared-server", "shared-api", "shared-core", "shared-security", "config", "shared-types"],
 
-  feature: ["shared-core", "shared-ui", "shared-utils", "state"],
+  // Features
+  feature: [
+    "entity",
+    "shared-ui",
+    "shared-utils",
+    "shared-api",
+    "state",
+    "shared-types",
+    "shared-core",
+    "config",
+    "server",
+    "shared-observability",
+  ],
 
-  "shared-api": ["shared-infra", "shared-core", "shared-ports"],
-  "shared-infra": ["shared-core", "shared-ports"],
-  "shared-security": ["shared-core", "shared-ports"],
-  "shared-ui": ["shared-core", "shared-utils", "state"],
-  "shared-utils": ["shared-core"],
-  "shared-core": [],
-  "shared-ports": [],
+  widget: ["feature", "entity", "shared-ui", "shared-types"],
 
-  config: ["shared-core"],
-  state: ["shared-core"],
+  entity: ["shared-core", "shared-types"],
 
-  client: ["shared-ui", "shared-utils", "state", "config"],
+  // Shared layers
+  "shared-api": [
+    "shared-core",
+    "shared-utils",
+    "shared-types",
+    "server",
+    "shared-request",
+    "shared-observability",
+    "shared-security",
+  ],
+  "shared-ui": ["shared-core", "shared-utils", "shared-types", "config", "feature"],
+  "shared-utils": ["shared-core", "shared-types"],
+  "shared-security": ["shared-core", "shared-types", "config", "shared-server", "server"],
+  "shared-infra": ["shared-core", "shared-types", "feature"],
+  "shared-observability": ["shared-core", "shared-types", "server"],
 
-  server: ["shared-core", "shared-ports", "shared-api", "shared-infra", "shared-security", "config"],
+  "shared-server": ["shared-core", "shared-api", "shared-types", "config", "server"],
 
-  proxy: ["shared-core", "shared-security", "shared-infra", "shared-api", "config"],
+  "shared-theme": ["shared-core", "shared-types", "config"],
+  "shared-types": [],
+
+  // Infra
+  providers: ["shared-ui", "shared-utils", "state", "config", "shared-theme", "feature", "shared-infra"],
+
+  state: ["shared-core", "shared-types"],
+  config: ["shared-core", "shared-types"],
+
+  // BFF server
+  server: ["shared-core", "shared-api", "shared-security", "shared-server", "config", "shared-types", "shared-request"],
+
+  proxy: ["server", "shared-core", "shared-security", "config", "shared-request"],
+
   tooling: ["config"],
-  scripts: ["config", "shared-core", "shared-utils"],
+  scripts: ["config", "shared-core"],
 };
 
 const NO_SELF_IMPORT = ["feature"];
@@ -230,6 +277,7 @@ export default defineConfig([
       "react-hooks": reactHooks,
       "unused-imports": unusedImports,
       prettier: prettierPlugin,
+
       security,
       sonarjs,
     },

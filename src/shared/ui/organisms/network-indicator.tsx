@@ -1,8 +1,8 @@
 "use client";
 
+import { onlineManager } from "@tanstack/react-query";
 import { useEffect } from "react";
 
-import { onlineManager } from "@tanstack/react-query";
 import { emitNotification } from "@/features/notifications/model/service";
 
 export function NetworkIndicator() {

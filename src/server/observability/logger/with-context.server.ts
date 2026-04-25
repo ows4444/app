@@ -1,7 +1,9 @@
 import { getTraceId } from "@/shared/request/request-context.server";
+
 import "server-only";
 import { baseLogger } from "./logger.server";
 import { serializeMeta } from "./serializer";
+
 function withContext(baseCtx: Record<string, unknown>) {
   const logger = baseLogger.child(baseCtx);
   return {
@@ -19,6 +21,7 @@ function withContext(baseCtx: Record<string, unknown>) {
     },
   };
 }
+
 export const apiLogger = withContext({ scope: "api" });
 export const appLogger = withContext({ scope: "app" });
 export const routeLogger = withContext({ scope: "route" });

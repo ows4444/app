@@ -1,7 +1,10 @@
 import pino from "pino";
+
 import "server-only";
 import { env } from "@/config/server/env";
+
 const isProd = env.NODE_ENV === "production";
+
 export const baseLogger = pino({
   level: env.LOG_LEVEL ?? (isProd ? "info" : "debug"),
   base: {

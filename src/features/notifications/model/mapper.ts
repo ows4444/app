@@ -1,4 +1,5 @@
 import { type Notification, type NotificationEvent } from "./types";
+
 export function mapEventToNotification(event: NotificationEvent): Notification | null {
   switch (event.type) {
     case "AUTH_LOGIN_SUCCESS":

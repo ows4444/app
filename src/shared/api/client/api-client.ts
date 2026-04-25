@@ -1,7 +1,8 @@
-import { executeRequest } from "@/server/infra/api-client/api-client.base";
-import { apiLogger } from "@/server/observability/logger/with-context.client";
+import { executeRequest } from "@/shared/api/core/execute-request";
+import { apiLogger } from "@/shared/observability/logger/with-context.client";
 import { getClientRequestContext } from "@/shared/request/request-context.client";
 import { getCsrfToken } from "@/shared/security/csrf.client";
+
 export async function apiClient<T>(path: string, options?: RequestInit & { cache?: RequestCache }) {
   const ctx = getClientRequestContext();
   const csrfToken = getCsrfToken();

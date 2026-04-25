@@ -1,4 +1,5 @@
 import { serializeMeta } from "./serializer";
+
 function log(level: string, msg: string, meta?: Record<string, unknown>) {
   const payload = {
     level,
@@ -6,16 +7,22 @@ function log(level: string, msg: string, meta?: Record<string, unknown>) {
     ts: new Date().toISOString(),
     ...serializeMeta(meta),
   };
+
   if (process.env.NODE_ENV === "development") {
     const method = resolveConsoleMethod(level);
+
     // eslint-disable-next-line no-console
     console[method as "log"]?.(payload);
+
     return;
   }
+
   const method = resolveConsoleMethod(level);
+
   // eslint-disable-next-line no-console
   console[method as "log"]?.(payload);
 }
+
 function resolveConsoleMethod(level: string): "log" | "info" | "warn" | "error" {
   switch (level) {
     case "error":
@@ -28,6 +35,7 @@ function resolveConsoleMethod(level: string): "log" | "info" | "warn" | "error" 
       return "log";
   }
 }
+
 export const baseLogger = {
   child: (ctx: Record<string, unknown>) => ({
     debug: (msg: string, meta?: Record<string, unknown>) => {

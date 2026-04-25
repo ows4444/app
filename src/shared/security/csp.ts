@@ -1,4 +1,5 @@
 import { env } from "@/config/server/env";
+
 export function buildCSP(nonce: string) {
   const isDev = env.NODE_ENV !== "production";
   const noncePart = `'nonce-${nonce}'`;
