@@ -3,13 +3,12 @@ import { type NextRequest } from "next/server";
 import { proxyHandler } from "@/server/proxy/proxy-handler";
 import { createMutation } from "@/shared/server/route/create-route";
 
-async function adapt(req: Request, ctx: { params: { path: string[] } }): Promise<Response> {
-  const nextReq = req as unknown as NextRequest;
+async function adapt(req: NextRequest, ctx: { params: Promise<{ path: string[] }> }): Promise<Response> {
+  const { path } = await ctx.params;
 
-  const res = await proxyHandler(nextReq, ctx.params.path);
+  const res = await proxyHandler(req, path);
 
   if (!res) {
-    // 🚨 MUST NEVER return null
     return new Response(
       JSON.stringify({
         error: {
@@ -24,7 +23,7 @@ async function adapt(req: Request, ctx: { params: { path: string[] } }): Promise
   return res;
 }
 
-const mutation = createMutation<{ params: { path: string[] } }>(adapt);
+const mutation = createMutation(adapt);
 
 export const GET = adapt;
 export const POST = mutation;

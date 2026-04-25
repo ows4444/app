@@ -2,7 +2,7 @@ import { serviceClient } from "@/server/http/upstream.client";
 import { createQuery, extractUpstreamError, normalizeErrorResponse } from "@/shared/server/route/create-route";
 
 export const runtime = "nodejs";
-export const GET = createQuery(async (req) => {
+export const GET = createQuery(async (req: Request) => {
   const upstream = await serviceClient("AUTH", "/auth/me", {
     method: "GET",
     headers: {

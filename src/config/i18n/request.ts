@@ -3,6 +3,14 @@ import { getRequestConfig } from "next-intl/server";
 
 import { defaultLocale, locales } from "./routing";
 
+import ar from "@/config/i18n/messages/ar.json";
+import en from "@/config/i18n/messages/en.json";
+
+const messagesMap = {
+  en,
+  ar,
+} as const;
+
 function isLocale(value: string | undefined): value is (typeof locales)[number] {
   return !!value && (locales as readonly string[]).includes(value);
 }
@@ -14,6 +22,6 @@ export default getRequestConfig(async () => {
   const locale = isLocale(raw) ? raw : defaultLocale;
   return {
     locale,
-    messages: (await import(`./messages/${locale}.json`)).default,
+    messages: messagesMap[locale],
   };
 });

@@ -18,13 +18,6 @@ export default async function RootLayout({ children }: { readonly children: Reac
   const headerStore = await headers();
   const nonce = headerStore.get("x-nonce");
 
-  /**
-   * ⚠️ Do not hard crash production on CSP failure
-   */
-  if (!nonce && process.env.NODE_ENV === "production") {
-    console.error("Missing CSP nonce — middleware misconfiguration");
-  }
-
   const safeNonce = nonce ?? null;
 
   const initialTheme = await getServerTheme();

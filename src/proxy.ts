@@ -9,7 +9,6 @@ import { appLogger } from "./server/observability/logger/with-context.server";
 import { generateCsrfToken } from "./server/security/csrf.server";
 import { runWithRequestContext } from "./shared/request/request-context.server";
 
-export const runtime = "nodejs";
 export function proxy(req: NextRequest) {
   try {
     const pathname = req.nextUrl.pathname;

@@ -1,5 +1,5 @@
 import { headers } from "next/headers";
-import { NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { type z } from "zod";
 
 import { env } from "@/config/server/env";
@@ -10,10 +10,10 @@ import { decode, generateCsrfToken } from "@/server/security/csrf.server";
 import { type AppRouteHandler } from "./types";
 
 export const runtime = "nodejs";
-export function createValidatedMutation<T extends z.ZodTypeAny>(
+export function createValidatedMutation<T extends z.ZodTypeAny, TParams = unknown>(
   schema: T,
-  handler: (data: z.infer<T>, req: Request, ctx: unknown) => Promise<Response>,
-): AppRouteHandler {
+  handler: (data: z.infer<T>, req: NextRequest, ctx: { params: Promise<TParams> }) => Promise<Response>,
+): AppRouteHandler<TParams> {
   return createMutation(async (req, ctx) => {
     const MAX_BODY_SIZE = 1024 * 10; // 10kb
     const contentLength = req.headers.get("content-length");
@@ -69,8 +69,10 @@ export function normalizeErrorResponse(error: string) {
   };
 }
 
-export function createMutation<TCtx = unknown>(handler: AppRouteHandler<TCtx>): AppRouteHandler<TCtx> {
-  return async (req, ctx) => {
+export function createMutation<TParams = unknown>(
+  handler: (req: NextRequest, ctx: { params: Promise<TParams> }) => Promise<Response> | Response,
+): AppRouteHandler<TParams> {
+  return async (req: NextRequest, ctx: { params: Promise<TParams> }) => {
     const MAX_BODY_SIZE = 1024 * 10; // 10kb
     const contentLength = req.headers.get("content-length");
 

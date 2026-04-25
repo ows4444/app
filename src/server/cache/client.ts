@@ -1,10 +1,7 @@
 import "server-only";
-import { Redis } from "@upstash/redis";
+import { Redis } from "ioredis";
 
 import { env } from "@/config/server/env";
 
 export const runtime = "nodejs";
-export const redis = new Redis({
-  url: env.UPSTASH_REDIS_URL,
-  token: env.UPSTASH_REDIS_TOKEN,
-});
+export const redis = new Redis(env.UPSTASH_REDIS_URL);

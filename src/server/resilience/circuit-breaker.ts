@@ -15,11 +15,20 @@ const keyFor = (key: string) => `circuit:${key}`;
 export async function withCircuitBreaker<T>(key: string, fn: () => Promise<T>): Promise<T> {
   const now = Date.now();
   const redisKey = keyFor(key);
-  const circuit = (await redis.get<Circuit>(redisKey)) ?? {
-    failures: 0,
-    state: "CLOSED",
-    nextTry: 0,
-  };
+
+  const raw = await redis.get(redisKey);
+
+  let circuit: Circuit;
+
+  if (raw) {
+    try {
+      circuit = JSON.parse(raw) as Circuit;
+    } catch {
+      circuit = { failures: 0, state: "CLOSED", nextTry: 0 };
+    }
+  } else {
+    circuit = { failures: 0, state: "CLOSED", nextTry: 0 };
+  }
 
   if (circuit.state === "OPEN") {
     if (now < circuit.nextTry) {
@@ -33,7 +42,8 @@ export async function withCircuitBreaker<T>(key: string, fn: () => Promise<T>): 
     .then(async (res) => {
       circuit.failures = 0;
       circuit.state = "CLOSED";
-      await redis.set(redisKey, circuit, { ex: 60 });
+
+      await redis.set(redisKey, JSON.stringify(circuit), "EX", 60);
 
       return res;
     })
@@ -45,7 +55,7 @@ export async function withCircuitBreaker<T>(key: string, fn: () => Promise<T>): 
         circuit.nextTry = now + RESET_TIMEOUT;
       }
 
-      await redis.set(redisKey, circuit, { ex: 60 });
+      await redis.set(redisKey, JSON.stringify(circuit), "EX", 60);
 
       throw err;
     });
