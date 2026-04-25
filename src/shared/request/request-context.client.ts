@@ -1,11 +1,10 @@
+let traceId: string | null = null;
 export function getClientRequestContext() {
+  if (!traceId) {
+    traceId = typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `client-${Date.now()}`;
+  }
   return {
-    traceId:
-      typeof crypto !== "undefined" && "randomUUID" in crypto
-        ? crypto.randomUUID()
-        : (() => {
-            throw new Error("crypto.randomUUID is not supported in this environment");
-          })(),
+    traceId,
     locale: null,
   };
 }

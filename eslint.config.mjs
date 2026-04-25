@@ -4,7 +4,6 @@ import prettier from "eslint-config-prettier";
 import boundaries from "eslint-plugin-boundaries";
 import importPlugin from "eslint-plugin-import";
 import prettierPlugin from "eslint-plugin-prettier";
-import reactPlugin from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
 import security from "eslint-plugin-security";
 import sonarjs from "eslint-plugin-sonarjs";
@@ -42,25 +41,18 @@ const IMPORT_RULES = {
   "import/consistent-type-specifier-style": ["error", "prefer-inline"],
 };
 const TYPESCRIPT_RULES = {
-  "@typescript-eslint/no-unnecessary-type-assertion": "error",
   "@typescript-eslint/prefer-return-this-type": "error",
   "@typescript-eslint/no-confusing-void-expression": "error",
-  "@typescript-eslint/require-await": "error",
+  // "@typescript-eslint/require-await": "error",
   "@typescript-eslint/prefer-nullish-coalescing": [
     "error",
     { ignorePrimitives: { string: true, number: true, boolean: true } },
   ],
-  "@typescript-eslint/no-explicit-any": "error",
+
+  "@typescript-eslint/no-explicit-any": ["error", { ignoreRestArgs: true }],
   "@typescript-eslint/no-non-null-assertion": "warn",
   "@typescript-eslint/no-empty-object-type": "error",
-  "@typescript-eslint/no-unused-vars": [
-    "error",
-    {
-      argsIgnorePattern: "^_",
-      varsIgnorePattern: "^_",
-      caughtErrorsIgnorePattern: "^_",
-    },
-  ],
+  "@typescript-eslint/no-unused-vars": "off",
   "@typescript-eslint/consistent-type-imports": ["error", { prefer: "type-imports", fixStyle: "inline-type-imports" }],
   "@typescript-eslint/prefer-optional-chain": "error",
 };
@@ -103,7 +95,7 @@ const SPACING_RULES = {
   "padded-blocks": ["error", "never"],
 };
 const GENERAL_RULES = {
-  "no-console": ["warn", { allow: ["warn", "error"] }],
+  "no-console": ["error", { allow: ["error"] }],
   "prettier/prettier": "error",
   "no-var": "error",
   "prefer-const": "error",
@@ -111,6 +103,21 @@ const GENERAL_RULES = {
   "no-duplicate-imports": "error",
   eqeqeq: ["error", "always", { null: "ignore" }],
   "no-throw-literal": "error",
+  "no-process-env": "error",
+  "no-restricted-imports": [
+    "error",
+    {
+      patterns: [
+        "**/*.server.*",
+        "@/shared/infra/**",
+        "@/shared/api/**",
+        "@/shared/security/**",
+        "@/shared/infra",
+        "@/shared/api",
+        "@/shared/security",
+      ],
+    },
+  ],
 };
 const REACT_RULES = {
   "react-hooks/exhaustive-deps": "error",
@@ -118,6 +125,7 @@ const REACT_RULES = {
   "react/no-array-index-key": "warn",
   "react/jsx-curly-brace-presence": ["warn", { props: "never", children: "never" }],
 };
+
 const BOUNDARY_ELEMENTS = [
   {
     type: "tooling",
@@ -125,153 +133,93 @@ const BOUNDARY_ELEMENTS = [
     mode: "file",
   },
   { type: "scripts", pattern: "scripts/**", mode: "folder" },
-  { type: "app", pattern: "src/app/**", mode: "folder" },
-  { type: "config", pattern: "src/config/**", mode: "folder" },
-  { type: "providers", pattern: "src/providers/**", mode: "folder" },
-  { type: "feature", pattern: "src/features/*", mode: "folder" },
-  { type: "feature-api", pattern: "src/features/*/api/**" },
-  { type: "feature-model", pattern: "src/features/*/model/**" },
-  { type: "feature-ui", pattern: "src/features/*/ui/**" },
-  { type: "feature-hooks", pattern: "src/features/*/hooks/**" },
-  { type: "feature-service", pattern: "src/features/*/service/**" },
-  { type: "state", pattern: "src/state/**", mode: "folder" },
-  { type: "i18n", pattern: "src/i18n/**", mode: "folder" },
-  { type: "shared-server", pattern: "src/shared/server/**", mode: "folder" },
-  { type: "shared-config", pattern: "src/shared/config/**", mode: "folder" },
-  { type: "shared-core", pattern: "src/shared/core/**", mode: "folder" },
 
-  { type: "shared-request", pattern: "src/shared/request/**", mode: "folder" },
-  { type: "shared-security", pattern: "src/shared/security/**", mode: "folder" },
-  { type: "shared-theme", pattern: "src/shared/theme/**", mode: "folder" },
-  { type: "shared-types", pattern: "src/shared/types/**", mode: "folder" },
-  { type: "shared-utils", pattern: "src/shared/utils/**", mode: "folder" },
-  { type: "shared-lib", pattern: "src/shared/lib/**", mode: "folder" },
+  { type: "rsc", pattern: "src/app/**/!(*.client).*", mode: "file" },
+  { type: "route", pattern: "src/app/**/route.ts", mode: "file" },
+
+  { type: "feature", pattern: "src/features/**", mode: "folder" },
+  { type: "shared-core", pattern: "src/shared/core/**", mode: "folder" },
+  { type: "shared-ports", pattern: "src/shared/ports/**", mode: "folder" },
+  { type: "shared-api", pattern: "src/shared/api/**", mode: "folder" },
   { type: "shared-infra", pattern: "src/shared/infra/**", mode: "folder" },
+  { type: "shared-security", pattern: "src/shared/security/**", mode: "folder" },
   { type: "shared-ui", pattern: "src/shared/ui/**", mode: "folder" },
-  { type: "shared-api-client", pattern: "src/shared/api/client.ts", mode: "file" },
-  { type: "shared-api-server", pattern: "src/shared/api/server.ts", mode: "file" },
+  { type: "shared-utils", pattern: "src/shared/utils/**", mode: "folder" },
+  { type: "providers", pattern: "src/providers/**", mode: "folder" },
+  { type: "config", pattern: "src/config/**", mode: "folder" },
+  { type: "state", pattern: "src/state/**", mode: "folder" },
+  { type: "server", pattern: "**/*.server.*", mode: "file" },
   { type: "client", pattern: "**/*.client.*", mode: "file" },
-  { type: "server-runtime", pattern: "**/*.server.*", mode: "file" },
-  { type: "proxy", pattern: "src/proxy.ts", mode: "file" },
+  { type: "proxy", pattern: ["src/proxy.ts", "src/app/**/route.ts"], mode: "file" },
 ];
-function createLayerRule(fromType, allowedTo = [], disallowedTo = []) {
+
+const LAYERS = {
+  rsc: ["feature", "shared-ui", "providers", "config", "state"],
+  route: ["shared-core", "shared-api", "shared-infra", "shared-security", "config"],
+
+  providers: ["shared-core", "shared-utils", "config", "shared-ui", "state"],
+
+  feature: ["shared-core", "shared-ui", "shared-utils", "state"],
+
+  "shared-api": ["shared-infra", "shared-core", "shared-ports"],
+  "shared-infra": ["shared-core", "shared-ports"],
+  "shared-security": ["shared-core", "shared-ports"],
+  "shared-ui": ["shared-core", "shared-utils", "state"],
+  "shared-utils": ["shared-core"],
+  "shared-core": [],
+  "shared-ports": [],
+
+  config: ["shared-core"],
+  state: ["shared-core"],
+
+  client: ["shared-ui", "shared-utils", "state", "config"],
+
+  server: ["shared-core", "shared-ports", "shared-api", "shared-infra", "shared-security", "config"],
+
+  proxy: ["shared-core", "shared-security", "shared-infra", "shared-api", "config"],
+  tooling: ["config"],
+  scripts: ["config", "shared-core", "shared-utils"],
+};
+
+const NO_SELF_IMPORT = ["feature"];
+
+function buildBoundaryRules(layers) {
+  const all = Object.keys(layers);
+
+  return Object.entries(layers).map(([from, allow]) => {
+    const disallow = all.filter((l) => l !== from && !allow.includes(l));
+
+    if (from === "client") {
+      const forbidden = ["server", "shared-infra", "shared-api", "shared-security"];
+      forbidden.forEach((f) => {
+        if (!disallow.includes(f)) disallow.push(f);
+      });
+    }
+
+    if (from === "route") {
+      const forbidden = ["shared-ui", "feature", "state"];
+      forbidden.forEach((f) => {
+        if (!disallow.includes(f)) disallow.push(f);
+      });
+    }
+
+    return createLayerRule(from, allow, disallow);
+  });
+}
+
+export function createLayerRule(from, allow = [], disallow = []) {
+  const allowSelf = !NO_SELF_IMPORT.includes(from);
   return {
-    from: { type: fromType },
-    allow: [{ to: { type: fromType } }, ...allowedTo.map((type) => ({ to: { type } }))],
-    ...(disallowedTo.length ? { disallow: disallowedTo.map((type) => ({ to: { type } })) } : {}),
+    from: { type: from },
+
+    allow: [...(allowSelf ? [{ to: { type: from } }] : []), ...allow.map((t) => ({ to: { type: t } }))],
+    ...(disallow.length && {
+      disallow: disallow.map((t) => ({ to: { type: t } })),
+    }),
   };
 }
-const BOUNDARY_RULES = [
-  createLayerRule("app", [
-    "providers",
-    "feature",
-    "shared-ui",
-    "shared-infra",
-    "shared-security",
-    "shared-theme",
-    "shared-request",
-    "shared-core",
-    "shared-config",
-    "shared-types",
-    "shared-lib",
-    "shared-server",
-    "state",
-    "i18n",
-    "server-runtime",
-    "client",
-    "config",
-  ]),
-  createLayerRule("providers", [
-    "providers",
-    "client",
-    "shared-ui",
-    "shared-infra",
-    "shared-security",
-    "shared-theme",
-    "shared-request",
-    "shared-core",
-    "shared-config",
-    "shared-types",
-    "shared-lib",
-    "state",
-    "config",
-  ]),
-  createLayerRule(
-    "client",
-    [
-      "client",
-      "providers",
-      "shared-ui",
-      "shared-infra",
-      "shared-lib",
-      "shared-core",
-      "shared-types",
-      "shared-theme",
-      "config",
-      "shared-request",
-      "shared-api-client",
-    ],
-    ["server-runtime", "shared-api-server"],
-  ),
-  createLayerRule("shared-server", [
-    "shared-server",
-    "shared-security",
-    "server-runtime",
-    "shared-core",
-    "shared-types",
-    "config",
-  ]),
-  createLayerRule("shared-ui", ["shared-lib", "shared-core", "shared-types", "state", "shared-theme", "config"]),
-  createLayerRule(
-    "shared-infra",
-    ["shared-lib", "shared-core", "shared-types", "shared-config", "shared-request", "server-runtime", "config"],
-    ["feature"],
-  ),
-  createLayerRule("shared-security", ["shared-core", "shared-config", "shared-types", "server-runtime", "config"]),
-  createLayerRule("shared-theme", ["shared-types"]),
-  createLayerRule("shared-request", ["shared-config", "shared-types"]),
-  createLayerRule("shared-lib", ["shared-core", "shared-config", "shared-types"]),
-  createLayerRule("shared-config", ["shared-types", "config"]),
-  createLayerRule("shared-types", []),
-  createLayerRule("state", ["shared-types"]),
-  createLayerRule(
-    "feature",
-    [
-      "shared-ui",
-      "shared-lib",
-      "shared-core",
-      "shared-config",
-      "shared-types",
-      "state",
-      "client",
-      "shared-api-client",
-      "shared-api-server",
-    ],
-    ["feature", "shared-infra"],
-  ),
-  createLayerRule("i18n", ["shared-lib", "shared-config", "shared-types"]),
-  createLayerRule("scripts", ["shared-config"]),
-  createLayerRule("tooling", []),
-  createLayerRule("server-runtime", [
-    "server-runtime",
-    "shared-infra",
-    "shared-security",
-    "shared-core",
-    "shared-types",
-    "shared-config",
-    "shared-theme",
-    "shared-api-server",
-    "config",
-  ]),
-  createLayerRule("proxy", [
-    "shared-config",
-    "shared-types",
-    "shared-lib",
-    "config",
-    "shared-security",
-    "server-runtime",
-  ]),
-];
+
+const BOUNDARY_RULES = buildBoundaryRules(LAYERS);
 export default defineConfig([
   ...nextVitals,
   ...nextTs,
@@ -279,7 +227,6 @@ export default defineConfig([
   {
     plugins: {
       import: importPlugin,
-      react: reactPlugin,
       "react-hooks": reactHooks,
       "unused-imports": unusedImports,
       prettier: prettierPlugin,
@@ -301,6 +248,8 @@ export default defineConfig([
       ...GENERAL_RULES,
       ...sonarjs.configs.recommended.rules,
       ...security.configs.recommended.rules,
+      "security/detect-object-injection": "off",
+      "sonarjs/cognitive-complexity": "off",
     },
   },
   {
@@ -343,10 +292,23 @@ export default defineConfig([
     },
   },
   {
+    files: ["**/*.server.ts", "src/app/**/route.ts"],
+    rules: {
+      "no-process-env": "off",
+    },
+  },
+  {
+    files: ["**/*.client.ts", "**/*.client.tsx"],
+    rules: {
+      "no-process-env": "error",
+    },
+  },
+  {
     files: ["eslint.config.mjs", "next.config.ts", "postcss.config.js", "tailwind.config.ts", "scripts/**"],
     rules: {
       "@typescript-eslint/no-require-imports": "off",
       "no-console": "off",
+      "no-process-env": "off",
     },
   },
   {

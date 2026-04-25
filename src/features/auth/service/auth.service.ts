@@ -1,9 +1,7 @@
-import { apiClient } from "@/shared/api/client";
-
+import { apiClient } from "@/shared/api/client/api-client";
 type LoginPayload = {
   identifier: string;
 };
-
 type LoginResponse = {
   data: {
     user: {
@@ -15,7 +13,6 @@ type LoginResponse = {
     nextStep?: string;
   };
 };
-
 type MeResponse = {
   data: {
     user: {
@@ -24,7 +21,6 @@ type MeResponse = {
     };
   };
 };
-
 export async function loginService(payload: LoginPayload) {
   return apiClient<LoginResponse>("/auth/login", {
     method: "POST",
@@ -34,7 +30,6 @@ export async function loginService(payload: LoginPayload) {
     },
   });
 }
-
 export async function getMeService() {
   return apiClient<MeResponse>("/auth/me", {
     method: "GET",

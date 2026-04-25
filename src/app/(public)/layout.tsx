@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { getUser } from "@/shared/server/auth/get-user";
+import { getUser } from "@/features/auth/server/get-auth";
 
 export default async function PublicLayout({ children }: { readonly children: React.ReactNode }) {
   const user = await getUser();

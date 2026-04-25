@@ -9,5 +9,11 @@ type Props = {
 };
 
 export function ExternalScript({ src, nonce, strategy = "afterInteractive" }: Readonly<Props>) {
-  return <Script src={src} nonce={nonce ?? undefined} strategy={strategy} />;
+  if (!nonce) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("CSP nonce is required for external scripts");
+    }
+  }
+
+  return <Script src={src} nonce={nonce} strategy={strategy} />;
 }

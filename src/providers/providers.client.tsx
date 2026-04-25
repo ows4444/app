@@ -2,24 +2,18 @@
 
 import { memo } from "react";
 
-import { CsrfProvider } from "@/providers/csrf-provider";
 import { QueryProvider } from "@/providers/query-provider";
 import { UIProvider } from "@/providers/ui-provider";
-import { NotificationRenderer } from "@/shared/notifications/ui/notification-renderer";
 import { NetworkIndicator } from "@/shared/ui/organisms/network-indicator";
+import { NotificationRenderer } from "@/features/notifications/ui/notification-renderer";
 
-export function ClientProviders({
-  children,
-  csrfToken,
-}: Readonly<{ children: React.ReactNode; csrfToken: string | null }>) {
+export function ClientProviders({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <QueryProvider>
-      <CsrfProvider token={csrfToken}>
-        <UIProvider>{children}</UIProvider>
+      <UIProvider>{children}</UIProvider>
 
-        <NetworkIndicator />
-        <NotificationRenderer />
-      </CsrfProvider>
+      <NetworkIndicator />
+      <NotificationRenderer />
     </QueryProvider>
   );
 }

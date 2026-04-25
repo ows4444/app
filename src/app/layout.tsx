@@ -1,4 +1,4 @@
-import { cookies, headers } from "next/headers";
+import { headers } from "next/headers";
 import "./globals.css";
 
 export const runtime = "nodejs";
@@ -8,7 +8,6 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 
 import { Providers } from "@/app/providers";
-import { decode, verifyCsrf } from "@/shared/security/csrf.server";
 import { ThemeScript } from "@/shared/theme/theme-script";
 import { getServerTheme } from "@/shared/theme/theme.server";
 
@@ -19,15 +18,22 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: { readonly children: React.ReactNode }) {
   const headerStore = await headers();
-  const nonce = headerStore.get("x-nonce") ?? null;
+  const nonce = headerStore.get("x-nonce");
+
+  /**
+   * ⚠️ Do not hard crash production on CSP failure
+   */
+  if (!nonce && process.env.NODE_ENV === "production") {
+    console.error("Missing CSP nonce — middleware misconfiguration");
+  }
+
+  const safeNonce = nonce ?? null;
+
   const initialTheme = await getServerTheme();
   const locale = await getLocale();
   const messages = await getMessages();
-  const cookieStore = await cookies();
-  const brand = "default";
 
-  const encoded = cookieStore.get("csrf")?.value;
-  const payload = encoded && verifyCsrf(encoded) ? decode(encoded) : null;
+  const brand = "default";
 
   return (
     <html
@@ -38,13 +44,11 @@ export default async function RootLayout({ children }: { readonly children: Reac
       className={initialTheme === "dark" ? "dark" : undefined}
     >
       <body>
-        <ThemeScript nonce={nonce} />
+        <ThemeScript nonce={safeNonce} />
 
-        {/* <ExternalScript src="https://www.google.com/recaptcha/api.js" nonce={nonce} /> */}
+        {/* <ExternalScript src="https://www.google.com/recaptcha/api.js" nonce={safeNonce} /> */}
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <Providers initialTheme={initialTheme} csrfToken={payload?.token ?? null}>
-            {children}
-          </Providers>
+          <Providers initialTheme={initialTheme}>{children}</Providers>
         </NextIntlClientProvider>
       </body>
     </html>

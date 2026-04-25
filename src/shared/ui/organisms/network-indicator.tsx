@@ -3,8 +3,7 @@
 import { useEffect } from "react";
 
 import { onlineManager } from "@tanstack/react-query";
-
-import { emitNotification } from "@/shared/notifications/model/service";
+import { emitNotification } from "@/features/notifications/model/service";
 
 export function NetworkIndicator() {
   useEffect(() => {

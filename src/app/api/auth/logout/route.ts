@@ -1,32 +1,29 @@
-import { serviceClient } from "@/shared/infra/service-client/service-client";
-import { createMutation, extractUpstreamError } from "@/shared/server/route/create-route";
-
+import { serviceClient } from "@/server/http/upstream.client";
+import { createMutation, extractUpstreamError, normalizeErrorResponse } from "@/shared/server/route/create-route";
 export const runtime = "nodejs";
-
 export const POST = createMutation(async (req) => {
   const upstream = await serviceClient<unknown>("AUTH", "/auth/logout", {
     method: "POST",
+    headers: {
+      cookie: req.headers.get("cookie") ?? "",
+      authorization: req.headers.get("authorization") ?? "",
+    },
   });
-
   const error = extractUpstreamError(upstream.data);
-
   if (error) {
-    return Response.json({ error }, { status: upstream.status });
+    return Response.json(normalizeErrorResponse(error), { status: upstream.status });
   }
-
   const res = Response.json(upstream.data, {
     status: upstream.status,
-    statusText: upstream.statusText,
+    headers: {
+      "Cache-Control": "no-store",
+      Vary: "Cookie",
+    },
   });
-
-  const raw = upstream.headers as unknown as { raw?: () => Record<string, string[]> };
-  const cookies = raw?.raw?.()["set-cookie"];
-
-  if (cookies) {
-    for (const cookie of cookies) {
+  if ("cookies" in upstream && upstream.cookies) {
+    for (const cookie of upstream.cookies) {
       res.headers.append("set-cookie", cookie);
     }
   }
-
   return res;
 });

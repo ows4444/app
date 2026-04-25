@@ -1,13 +1,16 @@
-import { redirect } from "next/navigation";
+import { Suspense } from "react";
 
-import { getUser } from "@/shared/server/auth/get-user";
+import { getUser } from "@/features/auth/server/get-auth";
 
-export default async function DashboardPage() {
+async function DashboardContent() {
   const user = await getUser();
+  return <p>Welcome {user?.full_name}</p>;
+}
 
-  if (!user) {
-    redirect("/login");
-  }
-
-  return <p>dashboard page</p>;
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<p>Loading dashboard...</p>}>
+      <DashboardContent />
+    </Suspense>
+  );
 }

@@ -8,7 +8,7 @@ import { z } from "zod";
 
 import { useLoginHandler } from "@/features/auth/hooks/use-login";
 import { resolvePostLoginRoute } from "@/features/auth/model/auth.routes";
-import { emitNotification } from "@/shared/notifications/model/service";
+import { emitNotification } from "@/features/notifications/model/service";
 
 const schema = z.object({
   identifier: z.union([z.email(), z.string().regex(/^9715\d{8}$/)], {

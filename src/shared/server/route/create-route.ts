@@ -1,39 +1,42 @@
+import { headers } from "next/headers";
 import { NextResponse } from "next/server";
-
-import { type z } from "zod";
-
+import { z } from "zod";
 import { env } from "@/config/server/env";
-import { isSafeMethod } from "@/shared/security/csrf.core";
-import { assertValidCsrf } from "@/shared/security/csrf.guard";
-import { decode, generateCsrfToken } from "@/shared/security/csrf.server";
-
 import { type AppRouteHandler } from "./types";
-
+import { isSafeMethod } from "@/server/security/csrf.core";
+import { assertValidCsrf } from "@/server/security/csrf.guard";
+import { decode, generateCsrfToken } from "@/server/security/csrf.server";
+export const runtime = "nodejs";
 export function createValidatedMutation<T extends z.ZodTypeAny>(
   schema: T,
   handler: (data: z.infer<T>, req: Request, ctx: unknown) => Promise<Response>,
 ): AppRouteHandler {
   return createMutation(async (req, ctx) => {
     const MAX_BODY_SIZE = 1024 * 10; // 10kb
-
     const contentLength = req.headers.get("content-length");
-
     if (contentLength && Number(contentLength) > MAX_BODY_SIZE) {
-      return NextResponse.json({ error: "PAYLOAD_TOO_LARGE" }, { status: 413 });
+      return NextResponse.json({ error: { code: "PAYLOAD_TOO_LARGE", message: "Payload too large" } }, { status: 413 });
     }
-
-    const body = await req.json();
-
+    const raw = await req.text();
+    if (raw.length > MAX_BODY_SIZE) {
+      return NextResponse.json({ error: { code: "PAYLOAD_TOO_LARGE", message: "Payload too large" } }, { status: 413 });
+    }
+    let body: unknown;
+    try {
+      body = JSON.parse(raw);
+    } catch {
+      return NextResponse.json({ error: "INVALID_JSON" }, { status: 400 });
+    }
     const parsed = schema.safeParse(body);
-
     if (!parsed.success) {
-      return NextResponse.json({ error: "INVALID_INPUT" }, { status: 400 });
+      return NextResponse.json(
+        { error: { code: "INVALID_INPUT", message: "Invalid request payload" } },
+        { status: 400 },
+      );
     }
-
     return handler(parsed.data, req, ctx);
   });
 }
-
 export function extractUpstreamError(data: unknown): string | null {
   if (
     typeof data === "object" &&
@@ -43,69 +46,66 @@ export function extractUpstreamError(data: unknown): string | null {
   ) {
     return (data as { error: string }).error;
   }
-
   return null;
 }
-
-// ─────────────────────────────────────────────
-// 🔒 MUTATION (CSRF ENFORCED ALWAYS)
-// ─────────────────────────────────────────────
+export function normalizeErrorResponse(error: string) {
+  return {
+    error: {
+      code: "UPSTREAM_ERROR",
+      message: error,
+    },
+  };
+}
 export function createMutation(handler: AppRouteHandler): AppRouteHandler {
   return async (req, ctx) => {
     const MAX_BODY_SIZE = 1024 * 10; // 10kb
-
     const contentLength = req.headers.get("content-length");
-
     if (contentLength && Number(contentLength) > MAX_BODY_SIZE) {
-      return NextResponse.json({ error: "PAYLOAD_TOO_LARGE" }, { status: 413 });
+      return NextResponse.json({ error: { code: "PAYLOAD_TOO_LARGE", message: "Payload too large" } }, { status: 413 });
     }
-
     if (!isSafeMethod(req.method)) {
       try {
-        await assertValidCsrf(); // ✅ SINGLE SOURCE OF TRUTH
+        assertValidCsrf(req);
       } catch {
-        return NextResponse.json({ error: "CSRF_VALIDATION_FAILED" }, { status: 403 });
+        return NextResponse.json(
+          {
+            error: {
+              code: "CSRF_VALIDATION_FAILED",
+              message: "Invalid CSRF token",
+            },
+          },
+          { status: 403 },
+        );
       }
     }
-
     const res = await handler(req, ctx);
-
-    // 🔁 rotate token after every mutation
-
     const encoded = generateCsrfToken();
     const payload = decode(encoded);
-
-    const headers = new Headers(res.headers);
-
+    const responseHeaders = new Headers(res.headers);
     const next = new NextResponse(res.body, {
       status: res.status,
       statusText: res.statusText,
-      headers,
+      headers: responseHeaders,
     });
-
+    const headerStore = await headers();
+    const traceId = headerStore.get("x-request-id");
+    if (traceId) {
+      next.headers.set("x-request-id", traceId);
+    }
     if (payload) {
-      // httpOnly signed payload
       next.cookies.set("csrf", encoded, {
         httpOnly: true,
-        sameSite: "lax",
+        sameSite: "strict",
         secure: env.NODE_ENV === "production",
         path: "/",
       });
-
-      // ✅ critical fix: sync client immediately
       next.headers.set("x-csrf-token", payload.token);
     } else {
-      // fallback safety (should never happen)
       return NextResponse.json({ error: "CSRF_ROTATION_FAILED" }, { status: 500 });
     }
-
     return next;
   };
 }
-
-// ─────────────────────────────────────────────
-// 🌐 QUERY (SAFE)
-// ─────────────────────────────────────────────
 export function createQuery(handler: AppRouteHandler): AppRouteHandler {
   return handler;
 }

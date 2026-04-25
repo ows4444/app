@@ -1,15 +1,14 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-
 import { useEffect } from "react";
 
 import { normalizeError } from "@/shared/core/errors/normalize";
-import { appLogger } from "@/shared/infra/logger/with-context.client";
+import { appLogger } from "@/server/observability/logger/with-context.client";
 
-export default function ErrorBoundary({ error }: Readonly<{ error: Error & { digest?: string }; reset: () => void }>) {
-  const router = useRouter();
-
+export default function ErrorBoundary({
+  error,
+  reset,
+}: Readonly<{ error: Error & { digest?: string }; reset: () => void }>) {
   useEffect(() => {
     appLogger.error("App Error", { error: normalizeError(error) });
   }, [error]);
@@ -20,7 +19,7 @@ export default function ErrorBoundary({ error }: Readonly<{ error: Error & { dig
 
       <button
         onClick={() => {
-          router.refresh();
+          reset();
         }}
         className="rounded bg-black px-4 py-2 text-white"
       >

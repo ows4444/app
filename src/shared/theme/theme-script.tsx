@@ -1,4 +1,8 @@
 export function ThemeScript({ nonce }: Readonly<{ nonce?: string | null }>) {
+  if (!nonce && process.env.NODE_ENV === "production") {
+    throw new Error("CSP nonce is required for inline script");
+  }
+
   const script = `
      (function() {
        try {

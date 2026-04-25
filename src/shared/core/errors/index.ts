@@ -9,11 +9,9 @@ export class AppError extends Error {
     Object.setPrototypeOf(this, new.target.prototype);
   }
 }
-
 export function isAppError(error: unknown): error is AppError {
   return error instanceof AppError;
 }
-
 export class HttpError extends AppError {
   constructor(
     public status: number,
@@ -22,13 +20,11 @@ export class HttpError extends AppError {
     super(message, "HTTP_ERROR", status >= 500);
   }
 }
-
 export class NetworkError extends AppError {
   constructor() {
     super("Network error", "NETWORK_ERROR");
   }
 }
-
 export class SessionExpiredError extends AppError {
   constructor() {
     super("Session expired", "SESSION_EXPIRED");
