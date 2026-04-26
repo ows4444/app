@@ -1,21 +1,21 @@
-export function ThemeScript({ nonce }: Readonly<{ nonce?: string | null }>) {
-  const script = `
-     (function() {
-       try {
-         var theme = document.cookie
-           .split("; ")
-           .find(row => row.startsWith("theme="))
-           ?.split("=")[1];
+import Script from "next/script";
 
-         if (!theme || theme === "system") {
-           var dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-           theme = dark ? "dark" : "light";
-         }
+import { env } from "@/config/server/env";
 
-         document.documentElement.classList.toggle("dark", theme === "dark");
-       } catch (e) {}
-     })();
-   `;
+export async function ThemeScript({ nonce }: Readonly<{ nonce: string }>) {
+  const isProduction = env.NODE_ENV === "production";
 
-  return <script nonce={nonce ?? undefined} suppressHydrationWarning dangerouslySetInnerHTML={{ __html: script }} />;
+  if (!isProduction) {
+    return (
+      <script nonce={nonce} suppressHydrationWarning>
+        {`!function(){try{"dark"===localStorage.getItem("theme")&&document.documentElement.classList.add("dark")}catch{}}();`}
+      </script>
+    );
+  }
+
+  return (
+    <Script id="theme-init" nonce={nonce} strategy="beforeInteractive">
+      {`!function(){try{"dark"===localStorage.getItem("theme")&&document.documentElement.classList.add("dark")}catch{}}();`}
+    </Script>
+  );
 }

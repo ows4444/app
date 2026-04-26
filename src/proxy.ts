@@ -2,12 +2,8 @@ import crypto from "crypto";
 
 import { type NextRequest, NextResponse } from "next/server";
 
-import { env } from "@/config/server/env";
+import { runWithRequestContext } from "@/shared/request/request-context.server";
 import { buildCSP } from "@/shared/security/csp";
-
-import { appLogger } from "./server/observability/logger/with-context.server";
-import { generateCsrfToken } from "./server/security/csrf.server";
-import { runWithRequestContext } from "./shared/request/request-context.server";
 
 export function proxy(req: NextRequest) {
   try {
@@ -19,17 +15,15 @@ export function proxy(req: NextRequest) {
       return NextResponse.next();
     }
 
+    // ✅ Generate per-request nonce (required for CSP)
     const nonce = crypto.randomBytes(16).toString("base64");
     const csp = buildCSP(nonce);
-
-    if (!nonce) {
-      return new NextResponse("Failed to generate CSP nonce", { status: 500 });
-    }
 
     const requestHeaders = new Headers(req.headers);
 
     requestHeaders.set("x-nonce", nonce);
 
+    // ✅ Ensure request ID exists
     if (!requestHeaders.get("x-request-id")) {
       requestHeaders.set("x-request-id", crypto.randomUUID());
     }
@@ -41,40 +35,11 @@ export function proxy(req: NextRequest) {
           headers: requestHeaders,
         },
       });
-      const csrfCookie = req.cookies.get("csrf")?.value;
 
-      if (!csrfCookie) {
-        const encoded = generateCsrfToken();
+      response.headers.set("x-nonce", nonce);
 
-        response.cookies.set("csrf", encoded, {
-          httpOnly: true,
-          sameSite: "strict",
-          secure: env.NODE_ENV === "production",
-          path: "/",
-        });
-      }
-
-      const existingLocale = req.cookies.get("locale")?.value;
-      const locale = existingLocale || "en";
-
-      if (existingLocale !== locale) {
-        response.cookies.set("locale", locale, {
-          path: "/",
-          sameSite: "lax",
-          httpOnly: true,
-          secure: env.NODE_ENV === "production",
-        });
-      }
-
+      // ✅ REQUIRED: CSP must be set here (per-request nonce)
       response.headers.set("Content-Security-Policy", csp);
-
-      if (env.NODE_ENV !== "production") {
-        appLogger.debug("REQ", {
-          path: req.nextUrl.pathname,
-          method: req.method,
-          traceId: requestHeaders.get("x-request-id"),
-        });
-      }
 
       response.headers.set(
         "Report-To",
@@ -85,6 +50,7 @@ export function proxy(req: NextRequest) {
         }),
       );
 
+      // ✅ Security headers only (cheap, safe)
       response.headers.set("Cross-Origin-Opener-Policy", "same-origin");
       response.headers.set("Cross-Origin-Embedder-Policy", "require-corp");
       response.headers.set("Cross-Origin-Resource-Policy", "same-origin");

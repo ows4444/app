@@ -47,7 +47,9 @@ async function fetchWithRetry(url: string, init: RequestInit, retries = 2): Prom
     try {
       return await fetch(url, init);
     } catch (err) {
-      if (attempt >= retries || init.method !== "GET") {
+      const isIdempotent = ["GET", "HEAD"].includes(init.method ?? "GET");
+
+      if (attempt >= retries || !isIdempotent) {
         throw err;
       }
 
@@ -71,33 +73,30 @@ export async function serviceClient<T>(
     const cookie = headerStore.get("cookie");
     const csrf = headerStore.get("x-csrf-token");
     const traceId = headerStore.get("x-request-id");
+    const traceparent = traceId
+      ? `00-${traceId.replace(/-/g, "").padEnd(32, "0").slice(0, 32)}-0000000000000000-01`
+      : undefined;
     const locale = headerStore.get("accept-language");
-    const controller = new AbortController();
-    const timeout = setTimeout(() => {
-      controller.abort();
-    }, 5000);
-    let res: Response;
+    const timeoutMs = 5000;
+    const signal = AbortSignal.timeout(timeoutMs);
 
-    try {
-      res = await withCircuitBreaker(service, () =>
-        fetchWithRetry(`${resolveServiceUrl(service)}${path}`, {
-          ...options,
-          cache: options.tags ? "force-cache" : "no-store",
-          next: options.tags ? { tags: options.tags } : undefined,
-          headers: {
-            ...(options.headers ?? {}),
-            ...(traceId ? { "x-request-id": traceId } : {}),
-            ...(traceId ? { "x-trace-id": traceId } : {}),
-            ...(csrf ? { "x-csrf-token": csrf } : {}),
-            ...(cookie ? { cookie } : {}),
-            ...(locale ? { "accept-language": locale } : {}),
-          },
-          signal: options.signal ?? controller.signal,
-        }),
-      );
-    } finally {
-      clearTimeout(timeout);
-    }
+    const res = await withCircuitBreaker(service, () =>
+      fetchWithRetry(`${resolveServiceUrl(service)}${path}`, {
+        ...options,
+        cache: options.tags ? "force-cache" : "no-store",
+        next: options.tags ? { tags: options.tags } : undefined,
+        headers: {
+          ...(options.headers ?? {}),
+          ...(traceId ? { "x-request-id": traceId } : {}),
+          ...(traceId ? { "x-trace-id": traceId } : {}),
+          ...(traceparent ? { traceparent } : {}),
+          ...(csrf ? { "x-csrf-token": csrf } : {}),
+          ...(cookie ? { cookie } : {}),
+          ...(locale ? { "accept-language": locale } : {}),
+        },
+        signal,
+      }),
+    );
 
     const contentType = res.headers.get("content-type") ?? "";
 

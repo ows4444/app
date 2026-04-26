@@ -1,10 +1,10 @@
 import { cookies } from "next/headers";
 import { getRequestConfig } from "next-intl/server";
 
-import { defaultLocale, locales } from "./routing";
-
 import ar from "@/config/i18n/messages/ar.json";
 import en from "@/config/i18n/messages/en.json";
+
+import { defaultLocale, locales } from "./routing";
 
 const messagesMap = {
   en,

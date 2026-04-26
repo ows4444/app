@@ -1,3 +1,5 @@
+import { clientEnv } from "@/config/client/env";
+
 import { serializeMeta } from "./serializer";
 
 function log(level: string, msg: string, meta?: Record<string, unknown>) {
@@ -8,7 +10,7 @@ function log(level: string, msg: string, meta?: Record<string, unknown>) {
     ...serializeMeta(meta),
   };
 
-  if (process.env.NODE_ENV === "development") {
+  if (clientEnv.NODE_ENV === "development") {
     const method = resolveConsoleMethod(level);
 
     // eslint-disable-next-line no-console

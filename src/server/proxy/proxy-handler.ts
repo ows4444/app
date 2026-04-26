@@ -1,10 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { SERVICE_TIMEOUTS } from "@/config/services";
-import { serviceClient } from "@/server/http/upstream.client";
+import { serviceClient } from "@/server/http/upstream.server";
 import { routeLogger } from "@/server/observability/logger/with-context.server";
 import { isSafeMethod } from "@/server/security/csrf.core";
 import { assertValidCsrf } from "@/server/security/csrf.guard";
+import { hardenSetCookie } from "@/shared/server/cookies/parse-and-harden";
+import { normalizeErrorResponse } from "@/shared/server/route/create-route";
 import { errorResponse } from "@/shared/server/route/error-response";
 
 import {
@@ -14,10 +16,8 @@ import {
   validateAuth,
   validateBody,
   validateRateLimit,
-  validateSchema,
+  // validateSchema,
 } from "./validators";
-
-type FetchMode = "no-store" | "force-cache";
 
 function filterCookies(raw: string): string {
   return raw
@@ -27,6 +27,7 @@ function filterCookies(raw: string): string {
 }
 
 export async function proxyHandler(req: NextRequest, path: string[]) {
+  // ✅ Enforce CSRF for all unsafe methods
   if (!isSafeMethod(req.method)) {
     try {
       assertValidCsrf(req);
@@ -45,7 +46,7 @@ export async function proxyHandler(req: NextRequest, path: string[]) {
     () => validateRoutePolicy(req, { path }),
     () => validateQuery(req),
     () => validateAuth(req),
-    () => validateSchema(req, { path }),
+    //() => validateSchema(req, { path }),
     () => validateBody(req),
   ];
 
@@ -65,12 +66,20 @@ export async function proxyHandler(req: NextRequest, path: string[]) {
       k === "content-type" ||
       k === "accept" ||
       k === "x-request-id" ||
+      k === "traceparent" ||
       k === "x-csrf-token" ||
       k === "accept-language" ||
       k === "user-agent"
     ) {
       headers[k] = value;
     }
+  }
+
+  // 🔥 Ensure CSRF always forwarded if present
+  const csrf = req.headers.get("x-csrf-token");
+
+  if (csrf && !headers["x-csrf-token"]) {
+    headers["x-csrf-token"] = csrf;
   }
 
   const cookie = req.headers.get("cookie");
@@ -93,7 +102,7 @@ export async function proxyHandler(req: NextRequest, path: string[]) {
       {
         status: upstream.status,
         headers: {
-          "Cache-Control": "no-store",
+          "Cache-Control": upstream.status >= 500 ? "no-store" : "private, max-age=60",
           Vary: "Cookie",
         },
       },
@@ -108,7 +117,7 @@ export async function proxyHandler(req: NextRequest, path: string[]) {
 
     if ("cookies" in upstream && upstream.cookies) {
       for (const c of upstream.cookies) {
-        res.headers.append("set-cookie", c);
+        res.headers.append("set-cookie", hardenSetCookie(c));
       }
     }
 
@@ -122,6 +131,8 @@ export async function proxyHandler(req: NextRequest, path: string[]) {
 
     const isTimeout = err instanceof DOMException && err.name === "AbortError";
 
-    return errorResponse("UPSTREAM_FAILURE", isTimeout ? "Upstream timeout" : "Upstream service unavailable", 502);
+    return NextResponse.json(normalizeErrorResponse(isTimeout ? "Upstream timeout" : "Upstream service unavailable"), {
+      status: 502,
+    });
   }
 }

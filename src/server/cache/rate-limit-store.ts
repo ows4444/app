@@ -1,9 +1,9 @@
 import "server-only";
-import { redis } from "./client";
+import { getRedis } from "./client";
 import { type RateLimitStore } from "../security/ports/rate-limit-store";
 
 export const runtime = "nodejs";
 export const redisRateLimitStore: RateLimitStore = {
-  incr: (key) => redis.incr(key),
-  expire: (key, seconds) => redis.expire(key, seconds),
+  incr: (key) => getRedis().incr(key),
+  expire: (key, seconds) => getRedis().expire(key, seconds),
 };

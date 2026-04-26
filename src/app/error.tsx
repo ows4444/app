@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import { normalizeError } from "@/shared/core/errors/normalize";
 import { appLogger } from "@/shared/observability/logger/with-context.client";
 
-export default function ErrorBoundary({
+export default function AppErrorBoundary({
   error,
   reset,
 }: Readonly<{ error: Error & { digest?: string }; reset: () => void }>) {

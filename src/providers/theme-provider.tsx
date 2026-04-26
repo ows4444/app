@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
 import { setStoredTheme, type Theme, type ThemeContextValue } from "@/shared/theme";
 import { resolveTheme } from "@/shared/theme/resolve-theme";
@@ -40,25 +40,18 @@ export function ThemeProvider({
     };
   }, [theme]);
 
-  const setTheme = useCallback((value: Theme) => {
+  const setTheme = (value: Theme) => {
     setThemeState(value);
-  }, []);
+  };
 
-  const toggleTheme = useCallback(() => {
+  const toggleTheme = () => {
     setThemeState((prev) => {
       const resolved = resolveTheme(prev);
       return resolved === "light" ? "dark" : "light";
     });
-  }, []);
+  };
 
-  const value = useMemo(
-    () => ({
-      theme,
-      setTheme,
-      toggleTheme,
-    }),
-    [setTheme, theme, toggleTheme],
-  );
+  const value = { theme, setTheme, toggleTheme };
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }

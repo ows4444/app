@@ -1,4 +1,4 @@
-import { baseLogger } from "@/server/observability/logger/logger.client";
+import { baseLogger } from "./logger.client";
 
 function withContext(baseCtx: Record<string, unknown>) {
   return baseLogger.child(baseCtx);

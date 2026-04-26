@@ -1,7 +1,6 @@
 "use client";
 
 import { useIsFetching, useIsMutating } from "@tanstack/react-query";
-import { useMemo } from "react";
 
 import { ScreenLoader } from "@/shared/ui/organisms/screen-loader";
 
@@ -14,9 +13,7 @@ export function UIProvider({ children }: { readonly children: React.ReactNode })
     predicate: (mutation) => mutation.meta?.blocking === true,
   });
 
-  const isBlocking = useMemo(() => {
-    return isFetching > 0 || isMutating > 0;
-  }, [isFetching, isMutating]);
+  const isBlocking = isFetching > 0 || isMutating > 0;
 
   return (
     <>

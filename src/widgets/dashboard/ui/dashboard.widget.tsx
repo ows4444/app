@@ -1,17 +1,18 @@
-import { Suspense } from "react";
+import React, { Suspense } from "react";
 
-import { getUser } from "@/features/auth/server/get-auth";
+import { getUser } from "@/server/auth/get-auth";
 
-async function DashboardContent() {
+async function UserSection() {
   const user = await getUser();
-
   return <p>Welcome {user?.name}</p>;
 }
 
 export function DashboardWidget() {
   return (
-    <Suspense fallback={<p>Loading...</p>}>
-      <DashboardContent />
-    </Suspense>
+    <React.Fragment>
+      <Suspense fallback={<p>Loading...</p>}>
+        <UserSection />
+      </Suspense>
+    </React.Fragment>
   );
 }

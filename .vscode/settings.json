@@ -21,5 +21,5 @@
     ["clsx\\(([^)]*)\\)", "(?:'|\"|`)([^'\"`]*)"],
     ["cn\\(([^)]*)\\)", "(?:'|\"|`)([^'\"`]*)"]
   ],
-  "cSpell.words": ["httponly", "sonarjs"]
+  "cSpell.words": ["httponly", "sonarjs", "traceparent"]
 }

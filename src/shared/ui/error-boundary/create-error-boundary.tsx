@@ -1,6 +1,6 @@
 import React from "react";
 
-import { env } from "@/config/server/env";
+import { clientEnv } from "@/config/client/env";
 import { normalizeError } from "@/shared/core/errors/normalize";
 
 type FallbackProps = {
@@ -44,7 +44,7 @@ export function createErrorBoundary({ name, fallback }: Options) {
     }
 
     override componentDidCatch(error: unknown, info: React.ErrorInfo) {
-      if (env.NODE_ENV !== "production") {
+      if (clientEnv.NODE_ENV !== "production") {
         console.error("React ErrorBoundary", normalizeError(error), info);
       }
     }

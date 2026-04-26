@@ -1,5 +1,5 @@
-import { z } from "zod";
 import "server-only";
+import { z } from "zod";
 
 const schema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]),
@@ -9,7 +9,7 @@ const schema = z.object({
   AUTH_SERVICE_URL: z.url(),
   CSRF_SECRET: z.string(),
   SESSION_SECRET: z.string(),
-  UPSTASH_REDIS_URL: z.string(),
+  REDIS_URL: z.string(),
   UPSTASH_REDIS_TOKEN: z.string(),
   NEXT_PUBLIC_APP_URL: z.url(),
 });

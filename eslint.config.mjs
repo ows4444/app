@@ -42,7 +42,6 @@ const IMPORT_RULES = {
 const TYPESCRIPT_RULES = {
   "@typescript-eslint/prefer-return-this-type": "error",
   "@typescript-eslint/no-confusing-void-expression": "error",
-  // "@typescript-eslint/require-await": "error",
   "@typescript-eslint/prefer-nullish-coalescing": [
     "error",
     { ignorePrimitives: { string: true, number: true, boolean: true } },
@@ -102,7 +101,16 @@ const GENERAL_RULES = {
   "no-duplicate-imports": "error",
   eqeqeq: ["error", "always", { null: "ignore" }],
   "no-throw-literal": "error",
-  "no-process-env": "error",
+  // "no-process-env": "error",
+
+  "no-restricted-properties": [
+    "error",
+    {
+      object: "process",
+      property: "env",
+      message: "Access environment variables only via @/config/server/env or @/config/client/env",
+    },
+  ],
 };
 const REACT_RULES = {
   "react-hooks/exhaustive-deps": "error",
@@ -120,6 +128,8 @@ const BOUNDARY_ELEMENTS = [
   { type: "scripts", pattern: "scripts/**", mode: "folder" },
 
   // App Router (CRITICAL FIX)
+  { type: "client", pattern: ["**/*.client.ts", "**/*.client.tsx"], mode: "file" },
+  // { type: "server-only", pattern: ["**/*.server.ts"], mode: "file" },
   { type: "route", pattern: "src/app/**/route.ts", mode: "file" },
   { type: "app", pattern: "src/app/**", mode: "folder" },
 
@@ -169,10 +179,22 @@ const LAYERS = {
     "shared-types",
     "shared-core",
     "shared-observability",
+    "client",
   ],
 
   // API routes (BFF boundary)
-  route: ["server", "shared-server", "shared-api", "shared-core", "shared-security", "config", "shared-types"],
+  route: ["shared-server", "shared-api", "shared-core", "shared-security", "config", "shared-types", "server"],
+
+  client: [
+    "shared-ui",
+    "shared-utils",
+    "shared-types",
+    "state",
+    "shared-core",
+    "feature",
+    "providers",
+    "shared-observability",
+  ],
 
   // Features
   feature: [
@@ -184,7 +206,6 @@ const LAYERS = {
     "shared-types",
     "shared-core",
     "config",
-    "server",
     "shared-observability",
   ],
 
@@ -201,14 +222,15 @@ const LAYERS = {
     "shared-request",
     "shared-observability",
     "shared-security",
+    "client",
   ],
   "shared-ui": ["shared-core", "shared-utils", "shared-types", "config", "feature"],
   "shared-utils": ["shared-core", "shared-types"],
   "shared-security": ["shared-core", "shared-types", "config", "shared-server", "server"],
   "shared-infra": ["shared-core", "shared-types", "feature"],
-  "shared-observability": ["shared-core", "shared-types", "server"],
+  "shared-observability": ["shared-core", "shared-types", "server", "shared-utils"],
 
-  "shared-server": ["shared-core", "shared-api", "shared-types", "config", "server"],
+  "shared-server": ["shared-core", "shared-api", "shared-types", "config", "server", "shared-security"],
 
   "shared-theme": ["shared-core", "shared-types", "config"],
   "shared-types": [],
@@ -220,7 +242,16 @@ const LAYERS = {
   config: ["shared-core", "shared-types"],
 
   // BFF server
-  server: ["shared-core", "shared-api", "shared-security", "shared-server", "config", "shared-types", "shared-request"],
+  server: [
+    "shared-core",
+    "shared-api",
+    "shared-security",
+    "shared-server",
+    "config",
+    "shared-types",
+    "shared-request",
+    "shared-observability",
+  ],
 
   proxy: ["server", "shared-core", "shared-security", "config", "shared-request"],
 
@@ -235,13 +266,6 @@ function buildBoundaryRules(layers) {
 
   return Object.entries(layers).map(([from, allow]) => {
     const disallow = all.filter((l) => l !== from && !allow.includes(l));
-
-    if (from === "client") {
-      const forbidden = ["server", "shared-infra", "shared-api", "shared-security"];
-      forbidden.forEach((f) => {
-        if (!disallow.includes(f)) disallow.push(f);
-      });
-    }
 
     if (from === "route") {
       const forbidden = ["shared-ui", "feature", "state"];
@@ -322,6 +346,7 @@ export default defineConfig([
     rules: {
       "boundaries/no-unknown": "error",
       "boundaries/no-unknown-files": "error",
+      "boundaries/entry-point": "error",
       "boundaries/dependencies": [
         "error",
         {
@@ -348,7 +373,46 @@ export default defineConfig([
   {
     files: ["**/*.client.ts", "**/*.client.tsx"],
     rules: {
-      "no-process-env": "error",
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            { group: ["@/server/*"], message: "Client code must not import server layer" },
+            { group: ["@/shared/server/*"], message: "Client cannot access shared server modules" },
+            { group: ["@/shared/security/*"], message: "Client cannot access server security modules" },
+            { group: ["**/*.server"], message: "Client cannot import server files" },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ["src/app/api/**/route.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: ["@/shared/ui/*", "@/features/*", "@/widgets/*", "@/state/*"],
+        },
+      ],
+    },
+  },
+  {
+    files: ["**/*.tsx", "**/*.jsx"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: ["@/server/*", "@/shared/server/*"],
+        },
+      ],
+    },
+  },
+  {
+    files: ["src/config/client/env.ts", "src/config/server/env.ts"],
+    rules: {
+      "no-process-env": "off",
+      "no-restricted-properties": "off",
     },
   },
   {

@@ -2,48 +2,10 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { env } from "@/config/server/env";
 
-import { proxySchemas } from "./schemas";
 import { redisRateLimitStore } from "../cache/rate-limit-store";
-import { decode } from "../security/csrf.server";
 import { rateLimit } from "../security/rate-limit";
 
 export const runtime = "nodejs";
-
-export async function validateSchema(req: NextRequest, params: { path: string[] }) {
-  if (["GET", "HEAD"].includes(req.method)) return null;
-
-  const [segment] = params.path;
-
-  if (!segment) return null;
-
-  const schema = proxySchemas[segment];
-
-  if (!schema) return null;
-
-  let json: unknown;
-
-  try {
-    json = await req.clone().json();
-  } catch {
-    return NextResponse.json({ error: { code: "INVALID_JSON", message: "Invalid JSON body" } }, { status: 400 });
-  }
-
-  const parsed = schema.safeParse(json);
-
-  if (!parsed.success) {
-    return NextResponse.json(
-      {
-        error: {
-          code: "INVALID_INPUT",
-          message: "Invalid request payload",
-        },
-      },
-      { status: 400 },
-    );
-  }
-
-  return null;
-}
 
 export function validateOrigin(req: NextRequest) {
   if (req.method === "GET") return null;
@@ -68,19 +30,13 @@ export function validateAuth(req: NextRequest) {
   const cookie = req.headers.get("cookie");
 
   if (!cookie) {
-    return NextResponse.json({ error: { code: "UNAUTHORIZED", message: "Missing auth context" } }, { status: 401 });
+    return NextResponse.json({ error: { code: "UNAUTHORIZED", message: "Missing session" } }, { status: 401 });
   }
 
-  const csrf = cookie
-    .split("; ")
-    .find((c) => c.startsWith("csrf="))
-    ?.split("=")[1];
+  const hasSession = cookie.split("; ").some((c) => c.startsWith("session=") && c.length > "session=".length);
 
-  if (!csrf || !decode(csrf)) {
-    return NextResponse.json(
-      { error: { code: "INVALID_SESSION", message: "Invalid session context" } },
-      { status: 401 },
-    );
+  if (!hasSession) {
+    return NextResponse.json({ error: { code: "UNAUTHORIZED", message: "No session cookie" } }, { status: 401 });
   }
 
   return null;

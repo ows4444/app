@@ -1,7 +1,8 @@
+import { clientEnv } from "@/config/client/env";
 import { createAbortSignal } from "@/shared/api/core/abort/abort";
 
 export async function performFetch(path: string, options: RequestInit = {}, extraHeaders?: HeadersInit) {
-  const base = typeof window === "undefined" ? (process.env.NEXT_PUBLIC_APP_URL ?? "") : "";
+  const base = typeof window === "undefined" ? (clientEnv.NEXT_PUBLIC_APP_URL ?? "") : "";
   const signal = createAbortSignal({
     parent: options.signal ?? null,
     timeout: 8000,

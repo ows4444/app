@@ -5,7 +5,7 @@ type Circuit = {
   nextTry: number;
 };
 import "server-only";
-import { redis } from "../cache/client";
+import { getRedis } from "../cache/client";
 
 export const runtime = "nodejs";
 const FAILURE_THRESHOLD = 5;
@@ -15,20 +15,11 @@ const keyFor = (key: string) => `circuit:${key}`;
 export async function withCircuitBreaker<T>(key: string, fn: () => Promise<T>): Promise<T> {
   const now = Date.now();
   const redisKey = keyFor(key);
+  const redis = getRedis();
 
   const raw = await redis.get(redisKey);
 
-  let circuit: Circuit;
-
-  if (raw) {
-    try {
-      circuit = JSON.parse(raw) as Circuit;
-    } catch {
-      circuit = { failures: 0, state: "CLOSED", nextTry: 0 };
-    }
-  } else {
-    circuit = { failures: 0, state: "CLOSED", nextTry: 0 };
-  }
+  const circuit: Circuit = raw ? JSON.parse(raw) : { failures: 0, state: "CLOSED", nextTry: 0 };
 
   if (circuit.state === "OPEN") {
     if (now < circuit.nextTry) {
@@ -47,8 +38,16 @@ export async function withCircuitBreaker<T>(key: string, fn: () => Promise<T>): 
 
       return res;
     })
-    .catch(async (err) => {
-      circuit.failures++;
+    .catch(async (err: unknown) => {
+      const isRetryable =
+        err instanceof Error &&
+        !err.message.includes("400") &&
+        !err.message.includes("401") &&
+        !err.message.includes("403");
+
+      if (isRetryable) {
+        circuit.failures++;
+      }
 
       if (circuit.failures >= FAILURE_THRESHOLD) {
         circuit.state = "OPEN";

@@ -1,14 +1,15 @@
+import "server-only";
+
 import { mapApiUserToDomain } from "@/entities/user/model/mapper";
 import { apiUserSchema } from "@/entities/user/model/schema";
-import { CacheTags } from "@/server/cache/tags";
-import { serviceClient } from "@/server/http/upstream.client";
+import { serviceClient } from "@/server/http/upstream.server";
 import { HttpError } from "@/shared/core/errors";
 
 async function getUserImpl() {
   try {
     const res = await serviceClient<{ user: { id: string; full_name: string } }>("AUTH", "/auth/me", {
       method: "GET",
-      tags: [CacheTags.auth()],
+      // 🔥 NEVER cache user-specific data globally
     });
 
     if (!res.data?.user) return null;

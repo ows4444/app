@@ -1,27 +1,35 @@
+import "server-only";
 import { env } from "@/config/server/env";
 
 export function buildCSP(nonce: string) {
   const isDev = env.NODE_ENV !== "production";
 
+  const nonceValue = `'nonce-${nonce}'`;
+
   const api = new URL(env.API_SERVICE_URL).origin;
   const auth = new URL(env.AUTH_SERVICE_URL).origin;
   return [
-    // "default-src 'self'",
-    // `script-src 'self' 'strict-dynamic' https://www.google.com https://www.gstatic.com ${isDev ? "'unsafe-eval'" : ""}`,
-    // "script-src-attr 'none'",
-    // `style-src 'self' ${isDev ? "'unsafe-inline'" : ""}`,
-    // "img-src 'self' data: blob:",
+    "default-src 'self'",
+
+    `script-src 'self' ${nonceValue} 'strict-dynamic' ${isDev ? "'unsafe-eval'" : ""}`,
+
+    "script-src-attr 'none'",
+
+    `style-src 'self' ${isDev ? "'unsafe-inline'" : nonceValue}`,
+    "img-src 'self' data: blob:",
+    "font-src 'self' data:",
     `connect-src 'self' ${api} ${auth}`,
-    // "font-src 'self' data:",
-    // `script-src-elem 'self' https://www.google.com https://www.gstatic.com`,
-    // "worker-src 'self' blob:",
-    // "frame-src 'self' https://www.google.com",
-    // "frame-ancestors 'none'",
-    // "base-uri 'self'",
-    // "form-action 'self'",
-    // "object-src 'none'",
-    // "upgrade-insecure-requests",
-    // "report-to csp-endpoint",
-    // "report-uri /api/csp-report",
+
+    "worker-src 'self' blob:",
+    "frame-src 'self'",
+    "block-all-mixed-content",
+
+    "frame-ancestors 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "object-src 'none'",
+    "report-to csp-endpoint",
+    "report-uri /api/csp-report",
+    "upgrade-insecure-requests",
   ].join("; ");
 }

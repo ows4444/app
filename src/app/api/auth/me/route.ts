@@ -1,4 +1,4 @@
-import { serviceClient } from "@/server/http/upstream.client";
+import { serviceClient } from "@/server/http/upstream.server";
 import { createQuery, extractUpstreamError, normalizeErrorResponse } from "@/shared/server/route/create-route";
 
 export const runtime = "nodejs";
