@@ -1,8 +1,6 @@
-import { revalidateTag } from "next/cache";
 import { headers } from "next/headers";
 import { z } from "zod";
 
-import { CacheTags } from "@/server/cache/tags";
 import { serviceClient } from "@/server/http/upstream.server";
 import { hardenSetCookie } from "@/shared/server/cookies/parse-and-harden";
 import {
@@ -34,8 +32,6 @@ export const POST = createValidatedMutation(loginSchema, async (parsed, req) => 
   if (error) {
     return Response.json(normalizeErrorResponse(error), { status: upstream.status });
   }
-
-  revalidateTag(CacheTags.auth());
 
   const res = Response.json(
     { data: upstream.data },

@@ -180,6 +180,9 @@ const LAYERS = {
     "shared-core",
     "shared-observability",
     "client",
+    "server",
+    "shared-server",
+    "shared-security",
   ],
 
   // API routes (BFF boundary)
@@ -194,6 +197,7 @@ const LAYERS = {
     "feature",
     "providers",
     "shared-observability",
+    "config",
   ],
 
   // Features
@@ -223,6 +227,7 @@ const LAYERS = {
     "shared-observability",
     "shared-security",
     "client",
+    "config",
   ],
   "shared-ui": ["shared-core", "shared-utils", "shared-types", "config", "feature"],
   "shared-utils": ["shared-core", "shared-types"],
@@ -251,6 +256,7 @@ const LAYERS = {
     "shared-types",
     "shared-request",
     "shared-observability",
+    "entity",
   ],
 
   proxy: ["server", "shared-core", "shared-security", "config", "shared-request"],
@@ -399,6 +405,7 @@ export default defineConfig([
   },
   {
     files: ["**/*.tsx", "**/*.jsx"],
+    ignores: ["src/app/**"],
     rules: {
       "no-restricted-imports": [
         "error",
