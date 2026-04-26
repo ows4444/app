@@ -3,11 +3,8 @@ import { NextResponse, type NextRequest } from "next/server";
 import { SERVICE_TIMEOUTS } from "@/config/services";
 import { serviceClient } from "@/server/http/upstream.server";
 import { routeLogger } from "@/server/observability/logger/with-context.server";
-import { isSafeMethod } from "@/server/security/csrf.core";
-import { assertValidCsrf } from "@/server/security/csrf.guard";
 import { hardenSetCookie } from "@/shared/server/cookies/parse-and-harden";
 import { normalizeErrorResponse } from "@/shared/server/route/create-route";
-import { errorResponse } from "@/shared/server/route/error-response";
 
 import {
   validateOrigin,
@@ -16,7 +13,6 @@ import {
   validateAuth,
   validateBody,
   validateRateLimit,
-  // validateSchema,
 } from "./validators";
 
 function filterCookies(raw: string): string {
@@ -27,15 +23,6 @@ function filterCookies(raw: string): string {
 }
 
 export async function proxyHandler(req: NextRequest, path: string[]) {
-  // ✅ Enforce CSRF for all unsafe methods
-  if (!isSafeMethod(req.method)) {
-    try {
-      assertValidCsrf(req);
-    } catch {
-      return errorResponse("CSRF_VALIDATION_FAILED", "Invalid CSRF token", 403);
-    }
-  }
-
   // 1. Rate limit (async)
   const rateLimitFailure = await validateRateLimit(req);
   if (rateLimitFailure) return rateLimitFailure;
@@ -46,7 +33,6 @@ export async function proxyHandler(req: NextRequest, path: string[]) {
     () => validateRoutePolicy(req, { path }),
     () => validateQuery(req),
     () => validateAuth(req),
-    //() => validateSchema(req, { path }),
     () => validateBody(req),
   ];
 
@@ -75,7 +61,6 @@ export async function proxyHandler(req: NextRequest, path: string[]) {
     }
   }
 
-  // 🔥 Ensure CSRF always forwarded if present
   const csrf = req.headers.get("x-csrf-token");
 
   if (csrf && !headers["x-csrf-token"]) {

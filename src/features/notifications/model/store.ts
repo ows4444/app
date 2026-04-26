@@ -4,6 +4,8 @@ import { type Notification } from "./types";
 class NotificationStore {
   private queue: Notification[] = [];
 
+  private MAX = 50;
+
   private listeners: Listener[] = [];
 
   private timers = new Map<string, ReturnType<typeof setTimeout>>();
@@ -20,6 +22,11 @@ class NotificationStore {
     };
 
     this.queue = [...this.queue, enriched];
+
+    if (this.queue.length > this.MAX) {
+      this.queue = this.queue.slice(-this.MAX);
+    }
+
     this.emit();
 
     if (notification.ttl) {

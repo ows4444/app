@@ -3,8 +3,6 @@ import { NextResponse } from "next/server";
 import { env } from "@/config/server/env";
 import { generateCsrfToken, decode } from "@/server/security/csrf.server";
 
-export const runtime = "nodejs";
-
 export async function GET() {
   const encoded = generateCsrfToken();
   const payload = decode(encoded);

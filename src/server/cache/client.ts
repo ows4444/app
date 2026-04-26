@@ -6,8 +6,6 @@ import { env } from "@/config/server/env";
 
 import { appLogger } from "../observability/logger/with-context.server";
 
-export const runtime = "nodejs";
-
 let _redis: Redis | null = null;
 
 export function getRedis() {

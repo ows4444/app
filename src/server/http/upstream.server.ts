@@ -2,6 +2,7 @@ import "server-only";
 import { headers } from "next/headers";
 
 import { env } from "@/config/server/env";
+import { SERVICE_TIMEOUTS } from "@/config/services";
 import { HttpError } from "@/shared/core/errors";
 import { mapToDomainError } from "@/shared/core/errors/error-mapper";
 import { normalizeError } from "@/shared/core/errors/normalize";
@@ -66,8 +67,6 @@ export async function serviceClient<T>(
   path: string,
   options: RequestInit & { tags?: string[] } = {},
 ): Promise<{ data: T; cookies: string[]; status: number; statusText: string }> {
-  const start = Date.now();
-
   try {
     const headerStore = await headers();
     const cookie = headerStore.get("cookie");
@@ -77,14 +76,14 @@ export async function serviceClient<T>(
       ? `00-${traceId.replace(/-/g, "").padEnd(32, "0").slice(0, 32)}-0000000000000000-01`
       : undefined;
     const locale = headerStore.get("accept-language");
-    const timeoutMs = 5000;
-    const signal = AbortSignal.timeout(timeoutMs);
+
+    const signal = AbortSignal.timeout(SERVICE_TIMEOUTS[service]);
 
     const res = await withCircuitBreaker(service, () =>
       fetchWithRetry(`${resolveServiceUrl(service)}${path}`, {
         ...options,
         cache: options.tags ? "force-cache" : "no-store",
-        next: options.tags ? { tags: options.tags } : undefined,
+        next: options.tags ? { tags: options.tags } : { revalidate: 0 },
         headers: {
           ...(options.headers ?? {}),
           ...(traceId ? { "x-request-id": traceId } : {}),
@@ -105,7 +104,6 @@ export async function serviceClient<T>(
         service,
         path,
         status: res.status,
-        duration: Date.now() - start,
       });
 
       if (contentType.includes("application/json")) {
@@ -135,7 +133,6 @@ export async function serviceClient<T>(
     apiLogger.error("SERVICE_FAILURE", {
       service,
       path,
-      duration: Date.now() - start,
       error: normalizeError(err),
     });
 

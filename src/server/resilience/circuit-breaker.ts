@@ -7,7 +7,6 @@ type Circuit = {
 import "server-only";
 import { getRedis } from "../cache/client";
 
-export const runtime = "nodejs";
 const FAILURE_THRESHOLD = 5;
 const RESET_TIMEOUT = 10_000;
 const keyFor = (key: string) => `circuit:${key}`;

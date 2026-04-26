@@ -4,7 +4,6 @@ import { serviceClient } from "@/server/http/upstream.server";
 import { hardenSetCookie } from "@/shared/server/cookies/parse-and-harden";
 import { createMutation, extractUpstreamError, normalizeErrorResponse } from "@/shared/server/route/create-route";
 
-export const runtime = "nodejs";
 export const POST = createMutation(async (req: NextRequest) => {
   const upstream = await serviceClient<unknown>("AUTH", "/auth/logout", {
     method: "POST",

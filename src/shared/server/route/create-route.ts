@@ -9,7 +9,6 @@ import { decode, generateCsrfToken } from "@/server/security/csrf.server";
 
 import { type AppRouteHandler } from "./types";
 
-export const runtime = "nodejs";
 export function createValidatedMutation<T extends z.ZodTypeAny, TParams = unknown>(
   schema: T,
   handler: (data: z.infer<T>, req: NextRequest, ctx: { params: Promise<TParams> }) => Promise<Response>,
@@ -33,7 +32,7 @@ export function createValidatedMutation<T extends z.ZodTypeAny, TParams = unknow
     try {
       body = JSON.parse(raw);
     } catch {
-      return NextResponse.json({ error: "INVALID_JSON" }, { status: 400 });
+      return NextResponse.json({ error: { code: "INVALID_JSON", message: "Invalid JSON body" } }, { status: 400 });
     }
 
     const parsed = schema.safeParse(body);

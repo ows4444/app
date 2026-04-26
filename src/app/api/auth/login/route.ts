@@ -9,7 +9,6 @@ import {
   normalizeErrorResponse,
 } from "@/shared/server/route/create-route";
 
-export const runtime = "nodejs";
 const loginSchema = z.object({
   identifier: z.union([z.email(), z.string().regex(/^9715\d{8}$/)], {
     error: () => ({ message: "Must be a valid email or UAE phone number starting with 9715" }),

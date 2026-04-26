@@ -5,7 +5,6 @@ import { env } from "@/config/server/env";
 
 import { timingSafeEqual } from "./csrf.core";
 
-export const runtime = "nodejs";
 const CSRF_SECRET = env.CSRF_SECRET;
 
 type CsrfPayload = {

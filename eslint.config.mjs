@@ -120,17 +120,18 @@ const REACT_RULES = {
 };
 
 const BOUNDARY_ELEMENTS = [
+  { type: "dynamic", pattern: ["**/*.dynamic.ts", "**/*.dynamic.tsx"], mode: "file" },
+
+  // App Router (CRITICAL FIX)
+  { type: "client", pattern: ["**/*.client.ts", "**/*.client.tsx"], mode: "file" },
+
+  { type: "route", pattern: "src/app/**/route.ts", mode: "file" },
   {
     type: "tooling",
     pattern: ["eslint.config.mjs", "next.config.ts", "postcss.config.js", "tailwind.config.ts"],
     mode: "file",
   },
   { type: "scripts", pattern: "scripts/**", mode: "folder" },
-
-  // App Router (CRITICAL FIX)
-  { type: "client", pattern: ["**/*.client.ts", "**/*.client.tsx"], mode: "file" },
-  // { type: "server-only", pattern: ["**/*.server.ts"], mode: "file" },
-  { type: "route", pattern: "src/app/**/route.ts", mode: "file" },
   { type: "app", pattern: "src/app/**", mode: "folder" },
 
   // Features
@@ -180,9 +181,19 @@ const LAYERS = {
     "shared-core",
     "shared-observability",
     "client",
+    "shared-security",
+    "dynamic",
+  ],
+
+  dynamic: [
     "server",
     "shared-server",
-    "shared-security",
+    "entity",
+    "shared-core",
+    "shared-types",
+    "shared-utils",
+    "shared-observability",
+    "shared-theme",
   ],
 
   // API routes (BFF boundary)
@@ -211,9 +222,10 @@ const LAYERS = {
     "shared-core",
     "config",
     "shared-observability",
+    "feature",
   ],
 
-  widget: ["feature", "entity", "shared-ui", "shared-types"],
+  widget: ["feature", "entity", "shared-ui", "shared-types", "dynamic"],
 
   entity: ["shared-core", "shared-types"],
 
@@ -241,7 +253,17 @@ const LAYERS = {
   "shared-types": [],
 
   // Infra
-  providers: ["shared-ui", "shared-utils", "state", "config", "shared-theme", "feature", "shared-infra"],
+  providers: [
+    "shared-ui",
+    "shared-utils",
+    "state",
+    "config",
+    "shared-theme",
+    "feature",
+    "shared-infra",
+    "dynamic",
+    "client",
+  ],
 
   state: ["shared-core", "shared-types"],
   config: ["shared-core", "shared-types"],
@@ -410,7 +432,7 @@ export default defineConfig([
       "no-restricted-imports": [
         "error",
         {
-          patterns: ["@/server/*", "@/shared/server/*"],
+          patterns: ["@/server/*", "@/shared/server/*", "!**/*.dynamic.tsx"],
         },
       ],
     },
@@ -420,6 +442,22 @@ export default defineConfig([
     rules: {
       "no-process-env": "off",
       "no-restricted-properties": "off",
+    },
+  },
+  {
+    files: ["**/*.dynamic.ts", "**/*.dynamic.tsx"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            { group: ["@/shared/ui/*"], message: "dynamic must not import UI layer" },
+            { group: ["@/widgets/*"], message: "dynamic must not import widgets" },
+            { group: ["@/providers/*"], message: "dynamic must not import providers" },
+            { group: ["**/*.client"], message: "dynamic must not import client components" },
+          ],
+        },
+      ],
     },
   },
   {

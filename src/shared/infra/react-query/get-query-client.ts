@@ -29,6 +29,11 @@ export function createQueryClient() {
       },
       mutations: {
         networkMode: "online",
+        retry: (failureCount, error: unknown) => {
+          if (isAppError(error) && !error.retryable) return false;
+
+          return failureCount < 1;
+        },
         onError: (error) => {
           emitNotification(mapErrorToEvent(error));
         },

@@ -5,8 +5,6 @@ import { env } from "@/config/server/env";
 import { redisRateLimitStore } from "../cache/rate-limit-store";
 import { rateLimit } from "../security/rate-limit";
 
-export const runtime = "nodejs";
-
 export function validateOrigin(req: NextRequest) {
   if (req.method === "GET") return null;
 

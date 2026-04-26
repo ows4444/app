@@ -4,7 +4,6 @@ import { AsyncLocalStorage } from "node:async_hooks";
 import { cookies, headers } from "next/headers";
 import { cache } from "react";
 
-export const runtime = "nodejs";
 const storage = new AsyncLocalStorage<{ traceId: string }>();
 
 export const getServerRequestContext = cache(async () => {
