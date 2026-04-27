@@ -1,13 +1,9 @@
 import { headers } from "next/headers";
 import { z } from "zod";
 
+import { hardenSetCookie } from "@/server/bff/cookies/harden-cookie";
+import { createValidatedMutation, extractUpstreamError, normalizeErrorResponse } from "@/server/bff/route/create-route";
 import { serviceClient } from "@/server/http/upstream.server";
-import { hardenSetCookie } from "@/shared/server/cookies/parse-and-harden";
-import {
-  createValidatedMutation,
-  extractUpstreamError,
-  normalizeErrorResponse,
-} from "@/shared/server/route/create-route";
 
 const loginSchema = z.object({
   identifier: z.union([z.email(), z.string().regex(/^9715\d{8}$/)], {

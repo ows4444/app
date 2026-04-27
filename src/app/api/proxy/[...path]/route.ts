@@ -1,7 +1,13 @@
 import { type NextRequest } from "next/server";
 
+import { createMutation } from "@/server/http/route/create-route";
 import { proxyHandler } from "@/server/proxy/proxy-handler";
-import { createMutation } from "@/shared/server/route/create-route";
+
+/**
+ * 🔒 SSRF HARDENING: Explicit route allowlist
+ * Only these top-level segments are allowed to be proxied.
+ */
+const ALLOWED_PROXY_ROUTES = new Set(["auth", "users"]);
 
 async function adapt(req: NextRequest, ctx: { params: Promise<{ path: string[] }> }): Promise<Response> {
   const { path } = await ctx.params;
@@ -11,6 +17,28 @@ async function adapt(req: NextRequest, ctx: { params: Promise<{ path: string[] }
       status: 400,
       headers: { "content-type": "application/json" },
     });
+  }
+
+  /**
+   * 🔒 SSRF HARDENING: Validate first segment against allowlist
+   * Prevents arbitrary upstream routing like:
+   *   /api/proxy/http://evil.com
+   */
+  const [firstSegment] = path;
+
+  if (!firstSegment || !ALLOWED_PROXY_ROUTES.has(firstSegment)) {
+    return new Response(
+      JSON.stringify({
+        error: {
+          code: "FORBIDDEN_ROUTE",
+          message: "Proxy route not allowed",
+        },
+      }),
+      {
+        status: 403,
+        headers: { "content-type": "application/json" },
+      },
+    );
   }
 
   const res = await proxyHandler(req, path);

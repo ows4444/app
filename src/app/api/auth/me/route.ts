@@ -1,5 +1,5 @@
+import { createQuery, extractUpstreamError, normalizeErrorResponse } from "@/server/bff/route/create-route";
 import { serviceClient } from "@/server/http/upstream.server";
-import { createQuery, extractUpstreamError, normalizeErrorResponse } from "@/shared/server/route/create-route";
 
 export const GET = createQuery(async (req: Request) => {
   const upstream = await serviceClient("AUTH", "/auth/me", {

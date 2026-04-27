@@ -145,7 +145,6 @@ const BOUNDARY_ELEMENTS = [
   { type: "shared-ui", pattern: "src/shared/ui/**", mode: "folder" },
   { type: "shared-utils", pattern: "src/shared/utils/**", mode: "folder" },
   { type: "shared-security", pattern: "src/shared/security/**", mode: "folder" },
-  { type: "shared-server", pattern: "src/shared/server/**", mode: "folder" },
   { type: "shared-theme", pattern: "src/shared/theme/**", mode: "folder" },
   { type: "shared-types", pattern: "src/shared/types/**", mode: "folder" },
   {
@@ -185,19 +184,10 @@ const LAYERS = {
     "dynamic",
   ],
 
-  dynamic: [
-    "server",
-    "shared-server",
-    "entity",
-    "shared-core",
-    "shared-types",
-    "shared-utils",
-    "shared-observability",
-    "shared-theme",
-  ],
+  dynamic: ["server", "entity", "shared-core", "shared-types", "shared-utils", "shared-observability", "shared-theme"],
 
   // API routes (BFF boundary)
-  route: ["shared-server", "shared-api", "shared-core", "shared-security", "config", "shared-types", "server"],
+  route: ["shared-api", "shared-core", "shared-security", "config", "shared-types", "server"],
 
   client: [
     "shared-ui",
@@ -243,11 +233,9 @@ const LAYERS = {
   ],
   "shared-ui": ["shared-core", "shared-utils", "shared-types", "config", "feature"],
   "shared-utils": ["shared-core", "shared-types"],
-  "shared-security": ["shared-core", "shared-types", "config", "shared-server", "server"],
+  "shared-security": ["shared-core", "shared-types", "config", "server"],
   "shared-infra": ["shared-core", "shared-types", "feature"],
   "shared-observability": ["shared-core", "shared-types", "server", "shared-utils"],
-
-  "shared-server": ["shared-core", "shared-api", "shared-types", "config", "server", "shared-security"],
 
   "shared-theme": ["shared-core", "shared-types", "config"],
   "shared-types": [],
@@ -273,7 +261,6 @@ const LAYERS = {
     "shared-core",
     "shared-api",
     "shared-security",
-    "shared-server",
     "config",
     "shared-types",
     "shared-request",
@@ -350,6 +337,7 @@ export default defineConfig([
       ...security.configs.recommended.rules,
       "security/detect-object-injection": "off",
       "sonarjs/cognitive-complexity": "off",
+      "sonarjs/no-nested-conditional": "warn",
     },
   },
   {

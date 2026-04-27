@@ -3,12 +3,11 @@ import { headers } from "next/headers";
 
 import { env } from "@/config/server/env";
 import { SERVICE_TIMEOUTS } from "@/config/services";
+import { apiLogger } from "@/server/observability/logger/with-context.server";
+import { withCircuitBreaker } from "@/server/resilience/circuit-breaker";
 import { HttpError } from "@/shared/core/errors";
 import { mapToDomainError } from "@/shared/core/errors/error-mapper";
 import { normalizeError } from "@/shared/core/errors/normalize";
-
-import { apiLogger } from "../observability/logger/with-context.server";
-import { withCircuitBreaker } from "../resilience/circuit-breaker";
 
 type ServiceName = "AUTH" | "API";
 
@@ -65,7 +64,11 @@ async function fetchWithRetry(url: string, init: RequestInit, retries = 2): Prom
 export async function serviceClient<T>(
   service: ServiceName,
   path: string,
-  options: RequestInit & { tags?: string[] } = {},
+  options: RequestInit & {
+    cache?: RequestCache;
+    revalidate?: number;
+    tags?: string[];
+  } = {},
 ): Promise<{ data: T; cookies: string[]; status: number; statusText: string }> {
   try {
     const headerStore = await headers();
@@ -82,8 +85,12 @@ export async function serviceClient<T>(
     const res = await withCircuitBreaker(service, () =>
       fetchWithRetry(`${resolveServiceUrl(service)}${path}`, {
         ...options,
-        cache: options.tags ? "force-cache" : "no-store",
-        next: options.tags ? { tags: options.tags } : { revalidate: 0 },
+        cache: options.cache ?? "no-store",
+        next: options.tags
+          ? { tags: options.tags }
+          : options.revalidate
+            ? { revalidate: options.revalidate }
+            : undefined,
         headers: {
           ...(options.headers ?? {}),
           ...(traceId ? { "x-request-id": traceId } : {}),

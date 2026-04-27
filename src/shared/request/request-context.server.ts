@@ -2,11 +2,10 @@ import "server-only";
 import { AsyncLocalStorage } from "node:async_hooks";
 
 import { cookies, headers } from "next/headers";
-import { cache } from "react";
 
 const storage = new AsyncLocalStorage<{ traceId: string }>();
 
-export const getServerRequestContext = cache(async () => {
+export async function getServerRequestContext() {
   const [cookieStore, headerStore] = await Promise.all([cookies(), headers()]);
   const traceId =
     headerStore.get("x-request-id") ??
@@ -15,7 +14,7 @@ export const getServerRequestContext = cache(async () => {
     traceId,
     locale: cookieStore.get("locale")?.value ?? null,
   };
-});
+}
 export function runWithRequestContext<T>(traceId: string, fn: () => T): T {
   return storage.run({ traceId }, fn);
 }

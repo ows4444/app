@@ -1,10 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { SERVICE_TIMEOUTS } from "@/config/services";
-import { serviceClient } from "@/server/http/upstream.server";
+import { hardenSetCookie } from "@/server/http/cookies/harden-cookie";
+import { serviceClient } from "@/server/http/gateway/service-client";
+import { normalizeErrorResponse } from "@/server/http/route/create-route";
 import { routeLogger } from "@/server/observability/logger/with-context.server";
-import { hardenSetCookie } from "@/shared/server/cookies/parse-and-harden";
-import { normalizeErrorResponse } from "@/shared/server/route/create-route";
 
 import {
   validateOrigin,

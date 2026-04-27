@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { extractUpstreamError } from "@/shared/server/route/create-route";
-import { errorResponse } from "@/shared/server/route/error-response";
+import { extractUpstreamError } from "@/server/bff/route/create-route";
+import { errorResponse } from "@/server/bff/route/error-response";
 
 export async function handleJsonResponse(upstream: Response) {
   const json = await upstream.json();
