@@ -7,12 +7,9 @@ import { z } from "zod";
 
 import { useLoginHandler } from "@/features/auth/hooks/use-login";
 import { resolvePostLoginRoute } from "@/features/auth/model/auth.routes";
-import { emitNotification } from "@/features/notifications/model/service";
 
 const schema = z.object({
-  identifier: z.union([z.email(), z.string().regex(/^9715\d{8}$/)], {
-    error: () => ({ message: "Must be a valid email or UAE phone number starting with 9715" }),
-  }),
+  identifier: z.union([z.email(), z.string().regex(/^9715\d{8}$/)]),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -39,8 +36,9 @@ export default function LoginPage() {
       const route = resolvePostLoginRoute(result.flow);
 
       router.replace(route);
+      router.refresh();
     } catch {
-      emitNotification({ type: "AUTH_LOGIN_FAILED" });
+      // Errors are handled by the hook, so we can ignore them here
     }
   }
 

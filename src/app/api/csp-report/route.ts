@@ -1,10 +1,20 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
 import { appLogger } from "@/server/observability/logger/with-context.server";
 
+const schema = z.object({
+  "csp-report": z.object({
+    "document-uri": z.string().optional(),
+    "violated-directive": z.string().optional(),
+    "blocked-uri": z.string().optional(),
+  }),
+});
+
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
+    const json = await req.json();
+    const body = schema.parse(json);
 
     appLogger.warn("CSP_VIOLATION", {
       violation: body,

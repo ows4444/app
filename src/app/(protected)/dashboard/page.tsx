@@ -1,5 +1,7 @@
-import { DashboardWidget } from "@/widgets/dashboard/ui/dashboard.widget";
+import { Suspense } from "react";
 
-export default async function DashboardPage() {
-  return <DashboardWidget {...{ id: "Id", name: "User Name" }} />;
+import { type User } from "@/entities/user";
+
+export default function Page({ children }: Readonly<{ children: (user: User) => React.ReactNode }>) {
+  return <Suspense fallback={<div>Loading dashboard...</div>}>{children}</Suspense>;
 }

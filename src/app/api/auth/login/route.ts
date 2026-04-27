@@ -1,49 +1,29 @@
-import { headers } from "next/headers";
-import { z } from "zod";
+import { SERVICES } from "@/config/services";
+import { loginRequestSchema, loginResponseSchema, loginApiResponseSchema } from "@/server/bff/contracts/auth.contract";
+import { mapLoginResponse } from "@/server/bff/mappers/auth.mapper";
+import { createMutationRoute } from "@/server/bff/route/create-mutation-route";
+import { httpClient } from "@/server/bff/transport/http";
+import { extractSafeCookiesFromRequest } from "@/server/http/cookies/extract";
 
-import { hardenSetCookie } from "@/server/bff/cookies/harden-cookie";
-import { createValidatedMutation, extractUpstreamError, normalizeErrorResponse } from "@/server/bff/route/create-route";
-import { serviceClient } from "@/server/http/upstream.server";
-
-const loginSchema = z.object({
-  identifier: z.union([z.email(), z.string().regex(/^9715\d{8}$/)], {
-    error: () => ({ message: "Must be a valid email or UAE phone number starting with 9715" }),
-  }),
-});
-
-export const POST = createValidatedMutation(loginSchema, async (parsed, req) => {
-  const headerStore = await headers();
-  const upstream = await serviceClient<unknown>("AUTH", "/auth/login", {
-    method: "POST",
-    body: JSON.stringify(parsed),
-    headers: {
-      "content-type": "application/json",
-      "x-request-id": headerStore.get("x-request-id") ?? "",
-      cookie: req.headers.get("cookie") ?? "",
-    },
-  });
-  const error = extractUpstreamError(upstream.data);
-
-  if (error) {
-    return Response.json(normalizeErrorResponse(error), { status: upstream.status });
-  }
-
-  const res = Response.json(
-    { data: upstream.data },
-    {
-      status: upstream.status,
-      headers: {
-        "Cache-Control": "no-store",
-        Vary: "Cookie",
+export const POST = createMutationRoute({
+  request: loginRequestSchema,
+  response: loginResponseSchema,
+  handler: async ({ data, req }) => {
+    const upstream = await httpClient(
+      `${SERVICES.AUTH}/auth/login`,
+      {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: {
+          "content-type": "application/json",
+          cookie: extractSafeCookiesFromRequest(req),
+        },
       },
-    },
-  );
+      { service: "auth", timeout: 3000, idempotent: false },
+    );
 
-  if ("cookies" in upstream && upstream.cookies) {
-    for (const cookie of upstream.cookies) {
-      res.headers.append("set-cookie", hardenSetCookie(cookie));
-    }
-  }
+    const parsed = loginApiResponseSchema.parse(upstream);
 
-  return res;
+    return mapLoginResponse(parsed);
+  },
 });

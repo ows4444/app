@@ -1,11 +1,9 @@
 let csrfToken: string | null = null;
 
-export function setCsrfToken(token: string) {
+export function setCsrfToken(token: string | null) {
   csrfToken = token;
 }
+
 export function getCsrfToken() {
   return csrfToken;
-}
-export function clearCsrfToken() {
-  csrfToken = null;
 }

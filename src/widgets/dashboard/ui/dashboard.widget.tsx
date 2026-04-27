@@ -1,5 +1,7 @@
 import { type User } from "@/entities/user";
 
-export function DashboardWidget({ name }: Readonly<User>) {
-  return <div>{name}</div>;
+import { DashboardWidgetClient } from "./dashboard-widget.client";
+
+export function DashboardWidget({ user }: Readonly<{ user: User }>) {
+  return <DashboardWidgetClient user={user} />;
 }

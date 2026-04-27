@@ -6,6 +6,7 @@ import { getCsrfToken } from "@/shared/security/csrf.client";
 export async function apiClient<T>(path: string, options?: RequestInit & { cache?: RequestCache }) {
   const ctx = getClientRequestContext();
   const csrfToken = getCsrfToken();
+
   const headers: HeadersInit = {
     ...(options?.headers ?? {}),
     ...(ctx ? { "x-request-id": ctx.traceId } : {}),

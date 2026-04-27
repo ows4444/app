@@ -1,7 +1,5 @@
 import { QueryCache, QueryClient } from "@tanstack/react-query";
 
-import { mapErrorToEvent } from "@/features/notifications/model/error-to-event";
-import { emitNotification } from "@/features/notifications/model/service";
 import { isAppError } from "@/shared/core/errors";
 
 export function createQueryClient() {
@@ -35,7 +33,7 @@ export function createQueryClient() {
           return failureCount < 1;
         },
         onError: (error) => {
-          emitNotification(mapErrorToEvent(error));
+          alert("An error occurred. Please try again.");
         },
       },
     },

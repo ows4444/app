@@ -3,7 +3,9 @@ import createNextIntlPlugin from "next-intl/plugin";
 
 const withNextIntl = createNextIntlPlugin("./src/config/i18n/request.ts");
 const nextConfig: NextConfig = {
+  reactStrictMode: true,
   cacheComponents: true,
+  poweredByHeader: false,
   typedRoutes: true,
   headers() {
     return [

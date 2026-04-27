@@ -1,9 +1,9 @@
-export async function syncCsrfToken(res: Response) {
+import { setCsrfToken } from "@/shared/security/csrf.client";
+
+export function syncCsrfToken(res: Response) {
   const token = res.headers.get("x-csrf-token");
 
-  if (token && typeof window !== "undefined") {
-    const { setCsrfToken } = await import("@/shared/security/csrf.client");
-
+  if (token) {
     setCsrfToken(token);
   }
 }

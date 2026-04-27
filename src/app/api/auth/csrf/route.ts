@@ -1,10 +1,20 @@
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 import { env } from "@/config/server/env";
-import { generateCsrfToken, decode } from "@/server/security/csrf.server";
+import { decode, generateCsrfToken } from "@/server/security/csrf/csrf.server";
+import { decodeDeviceId } from "@/server/security/device-id.server";
 
-export async function GET() {
-  const encoded = generateCsrfToken();
+export async function GET(req: Request) {
+  const cookieStore = await cookies();
+  const deviceRaw = cookieStore.get("device_id")?.value;
+  const deviceId = decodeDeviceId(deviceRaw);
+
+  if (!deviceId) {
+    return NextResponse.json({ error: "DEVICE_INVALID" }, { status: 403 });
+  }
+
+  const encoded = generateCsrfToken(deviceId);
   const payload = decode(encoded);
 
   if (!payload) {

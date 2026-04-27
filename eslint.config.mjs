@@ -123,7 +123,7 @@ const BOUNDARY_ELEMENTS = [
   { type: "dynamic", pattern: ["**/*.dynamic.ts", "**/*.dynamic.tsx"], mode: "file" },
 
   // App Router (CRITICAL FIX)
-  { type: "client", pattern: ["**/*.client.ts", "**/*.client.tsx"], mode: "file" },
+  { type: "client", pattern: ["src/**/**.client.ts", "src/**/**.client.tsx"], mode: "file" },
 
   { type: "route", pattern: "src/app/**/route.ts", mode: "file" },
   {
@@ -146,6 +146,7 @@ const BOUNDARY_ELEMENTS = [
   { type: "shared-utils", pattern: "src/shared/utils/**", mode: "folder" },
   { type: "shared-security", pattern: "src/shared/security/**", mode: "folder" },
   { type: "shared-theme", pattern: "src/shared/theme/**", mode: "folder" },
+  { type: "shared-session", pattern: "src/shared/session/**", mode: "folder" },
   { type: "shared-types", pattern: "src/shared/types/**", mode: "folder" },
   {
     type: "shared-observability",
@@ -182,6 +183,8 @@ const LAYERS = {
     "client",
     "shared-security",
     "dynamic",
+    "server",
+    "shared-session",
   ],
 
   dynamic: ["server", "entity", "shared-core", "shared-types", "shared-utils", "shared-observability", "shared-theme"],
@@ -199,6 +202,7 @@ const LAYERS = {
     "providers",
     "shared-observability",
     "config",
+    "shared-session",
   ],
 
   // Features
@@ -215,7 +219,7 @@ const LAYERS = {
     "feature",
   ],
 
-  widget: ["feature", "entity", "shared-ui", "shared-types", "dynamic"],
+  widget: ["feature", "entity", "shared-ui", "shared-types", "dynamic", "shared-session"],
 
   entity: ["shared-core", "shared-types"],
 
@@ -255,6 +259,8 @@ const LAYERS = {
 
   state: ["shared-core", "shared-types"],
   config: ["shared-core", "shared-types"],
+
+  "shared-session": ["shared-core", "shared-types", "entity"],
 
   // BFF server
   server: [

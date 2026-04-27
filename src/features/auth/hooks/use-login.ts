@@ -1,17 +1,23 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { resolveAuthFlow } from "../model/auth.flow";
 import { loginService } from "../service/auth.service";
 
 export function useLoginHandler() {
-  const mutation = useMutation({ mutationFn: loginService });
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: loginService,
+    mutationKey: ["auth", "login", "v1"],
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["user"] });
+    },
+  });
 
   async function login(data: { identifier: string }) {
     const res = await mutation.mutateAsync(data);
-    const flow = resolveAuthFlow(res.meta);
+
     return {
-      flow,
-      user: res.data.user,
+      flow: res.flow,
+      user: res.user,
     };
   }
 

@@ -1,38 +1,31 @@
-import { type NextRequest } from "next/server";
+import z from "zod";
 
-import { hardenSetCookie } from "@/server/bff/cookies/harden-cookie";
-import { createMutation, extractUpstreamError, normalizeErrorResponse } from "@/server/bff/route/create-route";
-import { serviceClient } from "@/server/http/upstream.server";
+import { SERVICES } from "@/config/services";
+import { createMutationRoute } from "@/server/bff/route/create-mutation-route";
+import { httpClient } from "@/server/bff/transport/http";
+import { extractSafeCookiesFromRequest } from "@/server/http/cookies/extract";
+import { HttpError } from "@/shared/core/errors";
 
-export const POST = createMutation(async (req: NextRequest) => {
-  const upstream = await serviceClient<unknown>("AUTH", "/auth/logout", {
-    method: "POST",
-    headers: {
-      cookie: req.headers.get("cookie") ?? "",
-    },
-  });
-  const error = extractUpstreamError(upstream.data);
+export const POST = createMutationRoute({
+  request: z.object({}), // empty
+  response: z.object({ success: z.boolean() }),
 
-  if (error) {
-    return Response.json(normalizeErrorResponse(error), { status: upstream.status });
-  }
-
-  const res = Response.json(
-    { data: upstream.data },
-    {
-      status: upstream.status,
-      headers: {
-        "Cache-Control": "no-store",
-        Vary: "Cookie",
+  handler: async ({ req }) => {
+    const upstream = await httpClient(
+      `${SERVICES.AUTH}/auth/logout`,
+      {
+        method: "POST",
+        headers: {
+          cookie: extractSafeCookiesFromRequest(req),
+        },
       },
-    },
-  );
+      { service: "auth", timeout: 3000, idempotent: false },
+    );
 
-  if ("cookies" in upstream && upstream.cookies) {
-    for (const cookie of upstream.cookies) {
-      res.headers.append("set-cookie", hardenSetCookie(cookie));
+    if (!upstream) {
+      throw new HttpError(500, "LOGOUT_FAILED");
     }
-  }
 
-  return res;
+    return { success: true };
+  },
 });

@@ -2,12 +2,44 @@ import crypto from "crypto";
 
 import { type NextRequest, NextResponse } from "next/server";
 
+import { generateDeviceId, encodeDeviceId } from "@/server/security/device-id.server";
 import { runWithRequestContext } from "@/shared/request/request-context.server";
 import { buildCSP } from "@/shared/security/csp";
+
+import { env } from "./config/server/env";
 
 export function proxy(req: NextRequest) {
   try {
     const pathname = req.nextUrl.pathname;
+
+    const origin = req.headers.get("origin");
+
+    const forwardedHost = req.headers.get("x-forwarded-host");
+    const host = forwardedHost ?? req.headers.get("host");
+
+    if (!host) {
+      return new NextResponse("Invalid host", { status: 400 });
+    }
+
+    const allowedOrigin = new URL(env.NEXT_PUBLIC_APP_URL);
+
+    if (origin && origin !== allowedOrigin.origin) {
+      return new NextResponse("Origin mismatch", { status: 403 });
+    }
+
+    const normalizedHost = host.toLowerCase();
+    const expectedHost = allowedOrigin.host.toLowerCase();
+
+    if (normalizedHost !== expectedHost) {
+      return new NextResponse("Forbidden host", { status: 403 });
+    }
+
+    const proto = req.headers.get("x-forwarded-proto") ?? "http";
+
+    if (env.NODE_ENV === "production" && proto !== "https") {
+      return new NextResponse("HTTPS required", { status: 403 });
+    }
+
     const lastSegment = pathname.split("/").pop();
     const isPublicFile = lastSegment?.includes(".") ?? false;
 
@@ -29,12 +61,30 @@ export function proxy(req: NextRequest) {
     }
 
     const traceId = String(requestHeaders.get("x-request-id"));
+
     return runWithRequestContext(traceId, () => {
       const response = NextResponse.next({
         request: {
           headers: requestHeaders,
         },
       });
+
+      // ✅ DEVICE COOKIE BOOTSTRAP
+      const existingDevice = req.cookies.get("device_id")?.value;
+
+      if (!existingDevice) {
+        const id = generateDeviceId();
+        const encoded = encodeDeviceId(id);
+
+        const isProd = env.NODE_ENV === "production";
+
+        response.cookies.set("device_id", encoded, {
+          httpOnly: true,
+          secure: isProd,
+          sameSite: "strict",
+          path: "/",
+        });
+      }
 
       response.headers.set("x-nonce", nonce);
 

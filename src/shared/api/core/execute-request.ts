@@ -23,5 +23,16 @@ export async function executeRequest<T>(
 
   syncCsrfToken(res);
 
+  if (res.status === 403) {
+    // attempt CSRF recovery once
+    await fetch("/api/auth/csrf", { credentials: "include" });
+
+    const retryRes = await performFetch(path, options, extraHeaders);
+
+    syncCsrfToken(retryRes);
+
+    return handleResponse<T>(retryRes, schema, logger, path, start);
+  }
+
   return handleResponse<T>(res, schema, logger, path, start);
 }

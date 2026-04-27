@@ -1,39 +1,19 @@
+import { initSecurity } from "@/shared/api/bootstrap";
 import { apiClient } from "@/shared/api/client/api-client";
+import { type AuthFlow } from "@/shared/types/auth-flow";
 
 type LoginPayload = {
   identifier: string;
 };
-type LoginResponse = {
-  data: {
-    user: {
-      id: string;
-      full_name: string;
-    };
-  };
-  meta?: {
-    nextStep?: string;
-  };
-};
-type MeResponse = {
-  data: {
-    user: {
-      id: string;
-      full_name: string;
-    };
-  };
-};
 
 export async function loginService(payload: LoginPayload) {
-  return apiClient<LoginResponse>("/auth/login", {
+  await initSecurity();
+
+  return apiClient<{
+    user: { id: string; name: string };
+    flow: AuthFlow;
+  }>("/auth/login", {
     method: "POST",
     body: JSON.stringify(payload),
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-}
-export async function getMeService() {
-  return apiClient<MeResponse>("/auth/me", {
-    method: "GET",
   });
 }

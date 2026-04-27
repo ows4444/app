@@ -3,13 +3,11 @@
 import { onlineManager } from "@tanstack/react-query";
 import { useEffect } from "react";
 
-import { emitNotification } from "@/features/notifications/model/service";
-
 export function NetworkIndicator() {
   useEffect(() => {
     return onlineManager.subscribe((online) => {
       if (!online) {
-        emitNotification({ type: "NETWORK_OFFLINE" });
+        alert("You are offline. Please check your internet connection.");
       }
     });
   }, []);

@@ -1,27 +1,23 @@
-import { createQuery, extractUpstreamError, normalizeErrorResponse } from "@/server/bff/route/create-route";
-import { serviceClient } from "@/server/http/upstream.server";
+import { env } from "@/config/server/env";
+import { mapApiUserToDomain } from "@/entities/user";
+import { apiUserSchema } from "@/server/bff/contracts/user.contract";
+import { createQueryRoute } from "@/server/bff/route/create-query-route";
+import { httpClient } from "@/server/bff/transport/http";
+import { extractSafeCookiesFromRequest } from "@/server/http/cookies/extract";
 
-export const GET = createQuery(async (req: Request) => {
-  const upstream = await serviceClient("AUTH", "/auth/me", {
-    method: "GET",
-    headers: {
-      cookie: req.headers.get("cookie") ?? "",
-    },
-  });
-  const error = extractUpstreamError(upstream.data);
-
-  if (error) {
-    return Response.json(normalizeErrorResponse(error), { status: upstream.status });
-  }
-
-  return Response.json(
-    { data: upstream.data },
+export const GET = createQueryRoute(async (req) => {
+  const upstream = await httpClient(
+    `${env.AUTH_SERVICE_URL}/auth/me`,
     {
-      status: upstream.status,
+      method: "GET",
       headers: {
-        "Cache-Control": "no-store",
-        Vary: "Cookie",
+        cookie: extractSafeCookiesFromRequest(req),
       },
     },
+    { service: "auth", timeout: 3000, idempotent: true },
   );
+
+  const parsed = apiUserSchema.parse(upstream);
+
+  return mapApiUserToDomain(parsed);
 });
