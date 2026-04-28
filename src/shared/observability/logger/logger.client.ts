@@ -10,7 +10,9 @@ function log(level: string, msg: string, meta?: Record<string, unknown>) {
     ...serializeMeta(meta),
   };
 
-  if (clientEnv.NODE_ENV === "development") {
+  const isDev = clientEnv.NODE_ENV === "development";
+
+  if (isDev) {
     const method = resolveConsoleMethod(level);
 
     // eslint-disable-next-line no-console

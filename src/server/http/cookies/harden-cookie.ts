@@ -1,19 +1,20 @@
 export function hardenSetCookie(raw: string): string {
-  const parts = raw.split(";").map((p) => p.trim());
+  if (!raw) return raw;
 
-  const base = parts[0];
+  // ⚠️ do NOT split cookies — just append attributes safely
+  let cookie = raw;
 
-  const attrs = new Map<string, string | boolean>();
-
-  for (const part of parts.slice(1)) {
-    const [k, v] = part.split("=");
-
-    if (k) attrs.set(k.toLowerCase(), v ?? true);
+  if (!cookie.toLowerCase().includes("secure")) {
+    cookie += "; Secure";
   }
 
-  attrs.set("samesite", "Strict");
-  attrs.set("secure", true);
-  attrs.set("httponly", true);
+  if (!cookie.toLowerCase().includes("httponly")) {
+    cookie += "; HttpOnly";
+  }
 
-  return [base, ...Array.from(attrs.entries()).map(([k, v]) => (v === true ? k : `${k}=${v}`))].join("; ");
+  if (!cookie.toLowerCase().includes("samesite")) {
+    cookie += "; SameSite=Strict";
+  }
+
+  return cookie;
 }

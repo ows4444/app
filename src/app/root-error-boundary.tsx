@@ -1,6 +1,6 @@
 "use client";
 
-import { createErrorBoundary } from "@/shared/ui/error-boundary/create-error-boundary";
+import { createErrorBoundary } from "@/shared/core/error-boundary/create-error-boundary";
 
 const RootErrorBoundary = createErrorBoundary({ name: "Root" });
 

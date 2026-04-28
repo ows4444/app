@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { HttpError } from "@/shared/core/errors";
 
 import { decodeDeviceId } from "../device-id.server";
-import { isSafeMethod, timingSafeEqual } from "./csrf.core";
+import { isSafeMethod, safeEqual } from "./csrf.core";
 import { decode, verifyCsrf } from "./csrf.server";
 
 export async function assertValidCsrf(req: Request) {
@@ -27,11 +27,17 @@ export async function assertValidCsrf(req: Request) {
     throw new HttpError(403, "CSRF_INVALID");
   }
 
+  const now = Date.now();
+
+  if (payload.exp < now) {
+    throw new HttpError(403, "CSRF_EXPIRED");
+  }
+
   if (payload.deviceId !== deviceId) {
     throw new HttpError(403, "DEVICE_MISMATCH");
   }
 
-  if (!timingSafeEqual(payload.token, header)) {
+  if (!safeEqual(payload.token, header)) {
     throw new HttpError(403, "CSRF_TOKEN_MISMATCH");
   }
 }

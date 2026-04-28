@@ -1,112 +1,39 @@
 import { cookies } from "next/headers";
-import { NextResponse } from "next/server";
-import { type z } from "zod";
+import { type NextRequest, NextResponse } from "next/server";
 
-import { redisRateLimitStore } from "@/server/cache/rate-limit-store";
-import { hardenSetCookie } from "@/server/http/cookies/harden-cookie";
-import { getTrustedIP } from "@/server/http/request/get-trusted-ip";
-import { assertValidCsrf } from "@/server/security/csrf/csrf.guard";
+import { routeLogger } from "@/server/observability/logger/with-context.server";
 import { attachCsrf } from "@/server/security/csrf/csrf.rotation";
 import { decodeDeviceId } from "@/server/security/device-id.server";
-import { rateLimit } from "@/server/security/rate-limit";
 
 import { normalizeErrorResponse } from "./normalize-error";
-import { validateOrigin } from "./origin.guard";
 
-type Handler<TReq, TRes> = (ctx: { data: TReq; req: Request }) => Promise<TRes>;
+type Handler<T> = (req: NextRequest) => Promise<T> | T;
 
-type Options<TReq, TRes> = {
-  request: z.ZodSchema<TReq>;
-  response: z.ZodSchema<TRes>;
-  handler: Handler<TReq, TRes>;
-};
+export function createMutationRoute<T>(handler: Handler<T>) {
+  return async function POST(req: NextRequest): Promise<Response> {
+    const start = Date.now();
 
-export function createMutationRoute<TReq, TRes>(opts: Options<TReq, TRes>) {
-  return async (req: Request): Promise<Response> => {
     try {
-      // -----------------------------
-      // 1. ORIGIN VALIDATION
-      // -----------------------------
-      validateOrigin(req);
+      const data = await handler(req);
 
-      // -----------------------------
-      // 2. RATE LIMIT (device-aware)
-      // -----------------------------
-      const ip = getTrustedIP(req);
+      const res = NextResponse.json(data);
+
       const cookieStore = await cookies();
-      const deviceId = decodeDeviceId(cookieStore.get("device_id")?.value) ?? "anon";
+      const deviceRaw = cookieStore.get("device_id")?.value;
+      const deviceId = decodeDeviceId(deviceRaw);
 
-      const rlKey = `${ip}:${deviceId}`;
-
-      const rl = await rateLimit(rlKey, redisRateLimitStore, { limit: 10 });
-
-      if (!rl.allowed) {
-        return NextResponse.json({ error: { code: "RATE_LIMITED" } }, { status: 429 });
+      if (deviceId) {
+        return attachCsrf(res, { deviceId });
       }
 
-      // -----------------------------
-      // 3. CSRF VALIDATION
-      // -----------------------------
-      await assertValidCsrf(req);
-
-      // -----------------------------
-      // 4. REQUEST VALIDATION
-      // -----------------------------
-      const json = await req.json().catch(() => null);
-
-      const parsed = opts.request.safeParse(json);
-
-      if (!parsed.success) {
-        return NextResponse.json({ error: { code: "INVALID_INPUT" } }, { status: 400 });
-      }
-
-      // -----------------------------
-      // 5. EXECUTE HANDLER
-      // -----------------------------
-      const result = await opts.handler({
-        data: parsed.data,
-        req,
-      });
-
-      // -----------------------------
-      // 6. RESPONSE VALIDATION
-      // -----------------------------
-      const validated = opts.response.safeParse(result);
-
-      if (!validated.success) {
-        throw new Error("BFF_RESPONSE_INVALID");
-      }
-
-      // -----------------------------
-      // 7. BUILD RESPONSE
-      // -----------------------------
-      const res = NextResponse.json(
-        { data: validated.data },
-        {
-          status: 200,
-          headers: {
-            "Cache-Control": "no-store",
-            Vary: "Cookie",
-          },
-        },
-      );
-
-      // -----------------------------
-      // 8. COOKIE HARDENING
-      // -----------------------------
-      const setCookies = res.headers.getSetCookie?.() ?? [];
-
-      for (const cookie of setCookies) {
-        res.headers.append("set-cookie", hardenSetCookie(cookie));
-      }
-
-      // -----------------------------
-      // 9. CSRF ROTATION (FIXED)
-      // -----------------------------
-      return attachCsrf(res, {
-        deviceId,
-      });
+      return res;
     } catch (err) {
+      routeLogger.error("MUTATION_ROUTE_ERROR", {
+        error: err,
+        path: req.nextUrl.pathname,
+        duration: Date.now() - start,
+      });
+
       return normalizeErrorResponse(err);
     }
   };

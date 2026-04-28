@@ -1,8 +1,14 @@
+type HttpErrorMeta = {
+  upstream?: boolean;
+  service?: string;
+};
+
 export class AppError extends Error {
   constructor(
     message: string,
     public readonly code: string,
     public readonly retryable: boolean = false,
+    public readonly meta?: Record<string, unknown>,
   ) {
     super(message);
     this.name = new.target.name;
@@ -16,8 +22,9 @@ export class HttpError extends AppError {
   constructor(
     public status: number,
     message: string,
+    meta?: HttpErrorMeta,
   ) {
-    super(message, "HTTP_ERROR", status >= 500);
+    super(message, "HTTP_ERROR", status >= 500, meta);
   }
 }
 export class NetworkError extends AppError {

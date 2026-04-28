@@ -1,6 +1,7 @@
 import { QueryCache, QueryClient } from "@tanstack/react-query";
 
 import { isAppError } from "@/shared/core/errors";
+import { uiLogger } from "@/shared/observability/logger/with-context.client";
 
 export function createQueryClient() {
   return new QueryClient({
@@ -33,7 +34,7 @@ export function createQueryClient() {
           return failureCount < 1;
         },
         onError: (error) => {
-          alert("An error occurred. Please try again.");
+          uiLogger.error("MUTATION_ERROR", { error });
         },
       },
     },

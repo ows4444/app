@@ -11,7 +11,7 @@ export function buildCSP(nonce: string) {
   return [
     "default-src 'self'",
 
-    `script-src 'self' ${nonceValue} 'strict-dynamic' ${isDev ? "'unsafe-eval'" : ""}`,
+    `script-src ${nonceValue} 'strict-dynamic' ${isDev ? "'unsafe-eval'" : ""}`,
 
     "script-src-attr 'none'",
 

@@ -16,20 +16,32 @@ function buildTraceFields() {
   };
 }
 
+function redact(meta: Record<string, unknown>) {
+  const clone = { ...meta };
+
+  if ("headers" in clone) {
+    const headers = clone.headers as Record<string, unknown>;
+    if (headers.authorization) headers.authorization = "[REDACTED]";
+
+    if (headers.cookie) headers.cookie = "[REDACTED]";
+  }
+
+  return clone;
+}
+
 function withContext(baseCtx: Record<string, unknown>) {
-  const logger = baseLogger.child(baseCtx);
   return {
     debug: (msg: string, meta?: Record<string, unknown>) => {
-      logger.debug({ ...buildTraceFields(), ...serializeMeta(meta) }, msg);
+      baseLogger.debug(msg, { ...buildTraceFields(), ...redact(serializeMeta(meta) ?? {}) });
     },
     info: (msg: string, meta?: Record<string, unknown>) => {
-      logger.info({ ...buildTraceFields(), traceparent: getTraceId(), ...serializeMeta(meta) }, msg);
+      baseLogger.info(msg, { ...baseCtx, ...buildTraceFields(), ...redact(serializeMeta(meta) ?? {}) });
     },
     warn: (msg: string, meta?: Record<string, unknown>) => {
-      logger.warn({ ...buildTraceFields(), ...serializeMeta(meta) }, msg);
+      baseLogger.warn(msg, { ...baseCtx, ...buildTraceFields(), ...redact(serializeMeta(meta) ?? {}) });
     },
     error: (msg: string, meta?: Record<string, unknown>) => {
-      logger.error({ ...buildTraceFields(), ...serializeMeta(meta) }, msg);
+      baseLogger.error(msg, { ...baseCtx, ...buildTraceFields(), ...redact(serializeMeta(meta) ?? {}) });
     },
   };
 }

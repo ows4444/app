@@ -21,3 +21,5 @@ export function runWithRequestContext<T>(traceId: string, fn: () => T): T {
 export function getTraceId(): string | undefined {
   return storage.getStore()?.traceId;
 }
+
+export const runtime = "nodejs";

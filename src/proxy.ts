@@ -23,7 +23,7 @@ export function proxy(req: NextRequest) {
 
     const allowedOrigin = new URL(env.NEXT_PUBLIC_APP_URL);
 
-    if (origin && origin !== allowedOrigin.origin) {
+    if (origin && new URL(origin).origin !== allowedOrigin.origin) {
       return new NextResponse("Origin mismatch", { status: 403 });
     }
 
@@ -34,9 +34,11 @@ export function proxy(req: NextRequest) {
       return new NextResponse("Forbidden host", { status: 403 });
     }
 
-    const proto = req.headers.get("x-forwarded-proto") ?? "http";
+    const proto = req.nextUrl.protocol.replace(":", "");
 
-    if (env.NODE_ENV === "production" && proto !== "https") {
+    const isLocalhost = host.includes("localhost") || host.startsWith("127.0.0.1") || host.startsWith("0.0.0.0");
+
+    if (env.NODE_ENV === "production" && !isLocalhost && proto !== "https") {
       return new NextResponse("HTTPS required", { status: 403 });
     }
 
@@ -114,3 +116,6 @@ export function proxy(req: NextRequest) {
 export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };
+
+// Proxy always runs on Node.js runtime.
+// export const runtime = "nodejs";

@@ -1,8 +1,8 @@
+import { type z } from "zod";
+
 import { resolveAuthFlow } from "@/features/auth/model/auth.flow";
 
 import { type loginApiResponseSchema } from "../contracts/auth.contract";
-
-import type z from "zod";
 
 export function mapLoginResponse(api: z.infer<typeof loginApiResponseSchema>) {
   const flow = resolveAuthFlow(api.nextStep ? { nextStep: api.nextStep } : undefined);

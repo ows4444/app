@@ -3,6 +3,7 @@ import { type z } from "zod";
 import { syncCsrfToken } from "@/shared/api/core/csrf";
 import { performFetch } from "@/shared/api/core/fetch";
 import { handleResponse } from "@/shared/api/core/response";
+import { getCsrfToken } from "@/shared/security/csrf.client";
 import { type Logger } from "@/shared/types/logger";
 
 type ApiOptions = RequestInit & {
@@ -23,11 +24,20 @@ export async function executeRequest<T>(
 
   syncCsrfToken(res);
 
-  if (res.status === 403) {
-    // attempt CSRF recovery once
+  const isCsrfError = res.headers.get("x-error-code") === "CSRF_INVALID";
+
+  if (res.status === 403 && isCsrfError) {
     await fetch("/api/auth/csrf", { credentials: "include" });
 
-    const retryRes = await performFetch(path, options, extraHeaders);
+    const freshToken = getCsrfToken();
+
+    const retryHeaders = {
+      ...(extraHeaders ?? {}),
+      ...(options.headers ?? {}),
+      ...(freshToken ? { "x-csrf-token": freshToken } : {}),
+    };
+
+    const retryRes = await performFetch(path, options, retryHeaders);
 
     syncCsrfToken(retryRes);
 

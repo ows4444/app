@@ -20,17 +20,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body suppressHydrationWarning>
         <RootErrorBoundaryProvider>
           <StaticProviders>
-            {/* NONCE (independent) */}
             <Suspense fallback={null}>
               <NonceDynamic />
-            </Suspense>
-
-            {/* INTL + THEME TREE */}
-            <Suspense fallback={null}>
               <IntlDynamic>
-                <Suspense fallback={null}>
-                  <ThemeDynamic>{children}</ThemeDynamic>
-                </Suspense>
+                <ThemeDynamic>{children}</ThemeDynamic>
               </IntlDynamic>
             </Suspense>
           </StaticProviders>

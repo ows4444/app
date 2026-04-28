@@ -1,9 +1,18 @@
 let csrfPromise: Promise<void> | null = null;
 
 export async function initSecurity() {
-  csrfPromise ??= fetch("/api/auth/csrf", {
-    credentials: "include",
-  }).then(() => {});
+  // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+  if (!csrfPromise) {
+    csrfPromise = fetch("/api/auth/csrf", {
+      credentials: "include",
+    })
+      .then(() => {})
+      .catch((err) => {
+        csrfPromise = null;
 
-  await csrfPromise;
+        throw err;
+      });
+  }
+
+  return csrfPromise;
 }

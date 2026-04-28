@@ -3,7 +3,7 @@ import crypto from "crypto";
 import "server-only";
 import { env } from "@/config/server/env";
 
-import { timingSafeEqual } from "./csrf.core";
+import { safeEqual } from "./csrf.core";
 
 const CSRF_SECRET = env.CSRF_SECRET;
 
@@ -31,7 +31,7 @@ export function decode(encoded: string): CsrfPayload | null {
     if (!json || !signature) return null;
 
     const expected = sign(json);
-    if (!timingSafeEqual(signature, expected)) return null;
+    if (!safeEqual(signature, expected)) return null;
 
     return JSON.parse(json);
   } catch {

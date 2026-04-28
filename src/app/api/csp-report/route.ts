@@ -13,7 +13,8 @@ const schema = z.object({
 
 export async function POST(req: Request) {
   try {
-    const json = await req.json();
+    const text = await req.text();
+    const json = JSON.parse(text);
     const body = schema.parse(json);
 
     appLogger.warn("CSP_VIOLATION", {
@@ -26,3 +27,5 @@ export async function POST(req: Request) {
     return new NextResponse(null, { status: 204 });
   }
 }
+
+export const runtime = "nodejs";

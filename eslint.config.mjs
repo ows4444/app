@@ -142,7 +142,7 @@ const BOUNDARY_ELEMENTS = [
   // Shared (split correctly)
   { type: "shared-api", pattern: "src/shared/api/**", mode: "folder" },
   { type: "shared-core", pattern: "src/shared/core/**", mode: "folder" },
-  { type: "shared-ui", pattern: "src/shared/ui/**", mode: "folder" },
+  { type: "shared-ui", pattern: ["src/shared/ui/**", "!**/*.client.tsx"], mode: "folder" },
   { type: "shared-utils", pattern: "src/shared/utils/**", mode: "folder" },
   { type: "shared-security", pattern: "src/shared/security/**", mode: "folder" },
   { type: "shared-theme", pattern: "src/shared/theme/**", mode: "folder" },
@@ -156,6 +156,13 @@ const BOUNDARY_ELEMENTS = [
 
   { type: "shared-request", pattern: "src/shared/request/**", mode: "folder" },
   { type: "shared-infra", pattern: "src/shared/infra/**", mode: "folder" },
+  { type: "shared-cache", pattern: "src/shared/cache/**", mode: "folder" },
+  { type: "server-cache", pattern: "src/server/cache/**", mode: "folder" },
+  { type: "shared-cache", pattern: ["src/shared/cache/**", "src/shared/cache/*.ts"], mode: "folder" },
+  { type: "server-cache", pattern: "src/server/cache/**", mode: "folder" },
+
+  // 🔥 FIX: shared/api/server was NOT covered
+  { type: "shared-api-server", pattern: "src/shared/api/server/**", mode: "folder" },
 
   // Infra
   { type: "providers", pattern: "src/providers/**", mode: "folder" },
@@ -170,6 +177,7 @@ const BOUNDARY_ELEMENTS = [
 const LAYERS = {
   // App (RSC layer)
   app: [
+    "shared-api",
     "feature",
     "widget",
     "entity",
@@ -187,7 +195,17 @@ const LAYERS = {
     "shared-session",
   ],
 
-  dynamic: ["server", "entity", "shared-core", "shared-types", "shared-utils", "shared-observability", "shared-theme"],
+  dynamic: [
+    "server",
+    "entity",
+    "shared-core",
+    "shared-types",
+    "shared-utils",
+    "shared-observability",
+    "shared-theme",
+    "providers",
+    "shared-ui",
+  ],
 
   // API routes (BFF boundary)
   route: ["shared-api", "shared-core", "shared-security", "config", "shared-types", "server"],
@@ -203,6 +221,7 @@ const LAYERS = {
     "shared-observability",
     "config",
     "shared-session",
+    "entity",
   ],
 
   // Features
@@ -219,7 +238,7 @@ const LAYERS = {
     "feature",
   ],
 
-  widget: ["feature", "entity", "shared-ui", "shared-types", "dynamic", "shared-session"],
+  widget: ["feature", "entity", "shared-ui", "shared-types", "dynamic", "shared-session", "client"],
 
   entity: ["shared-core", "shared-types"],
 
@@ -234,11 +253,15 @@ const LAYERS = {
     "shared-security",
     "client",
     "config",
+    "entity",
+    "shared-api-server",
+    "shared-cache",
   ],
-  "shared-ui": ["shared-core", "shared-utils", "shared-types", "config", "feature"],
+  "shared-ui": ["shared-core", "shared-utils", "shared-types", "config", "dynamic"],
+  "shared-core": ["shared-types", "config"],
   "shared-utils": ["shared-core", "shared-types"],
   "shared-security": ["shared-core", "shared-types", "config", "server"],
-  "shared-infra": ["shared-core", "shared-types", "feature"],
+  "shared-infra": ["shared-core", "shared-types", "feature", "client"],
   "shared-observability": ["shared-core", "shared-types", "server", "shared-utils"],
 
   "shared-theme": ["shared-core", "shared-types", "config"],
@@ -272,6 +295,7 @@ const LAYERS = {
     "shared-request",
     "shared-observability",
     "entity",
+    "server-cache",
   ],
 
   proxy: ["server", "shared-core", "shared-security", "config", "shared-request"],
@@ -445,7 +469,6 @@ export default defineConfig([
         "error",
         {
           patterns: [
-            { group: ["@/shared/ui/*"], message: "dynamic must not import UI layer" },
             { group: ["@/widgets/*"], message: "dynamic must not import widgets" },
             { group: ["@/providers/*"], message: "dynamic must not import providers" },
             { group: ["**/*.client"], message: "dynamic must not import client components" },

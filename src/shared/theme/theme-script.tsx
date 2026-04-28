@@ -14,7 +14,7 @@ export async function ThemeScript({ nonce }: Readonly<{ nonce: string }>) {
   }
 
   return (
-    <Script id="theme-init" nonce={nonce} strategy="beforeInteractive">
+    <Script id="theme-init" nonce={nonce} strategy="afterInteractive">
       {`!function(){try{"dark"===localStorage.getItem("theme")&&document.documentElement.classList.add("dark")}catch{}}();`}
     </Script>
   );

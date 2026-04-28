@@ -1,6 +1,5 @@
-import { z } from "zod";
+import { type z } from "zod";
 
-import { apiResponseSchema } from "@/shared/api/contracts/api-response.schema";
 import { HttpError } from "@/shared/core/errors";
 import { type Logger } from "@/shared/types/logger";
 
@@ -21,17 +20,22 @@ export async function handleResponse<T>(
 
   if (contentType.includes("application/json")) {
     const json = await res.json();
-    const parsed = apiResponseSchema(schema ?? z.unknown()).safeParse(json);
 
-    if (!parsed.success) {
+    if (!json || typeof json !== "object") {
       throw new HttpError(res.status, "INVALID_RESPONSE_FORMAT");
     }
 
-    if (parsed.data.error) {
-      throw new HttpError(res.status, parsed.data.error);
+    if ("error" in json) {
+      const err = json as { error?: { message?: string } | string };
+      const message = typeof err.error === "string" ? err.error : (err.error?.message ?? "HTTP_ERROR");
+      throw new HttpError(res.status, message);
     }
 
-    return parsed.data.data as T;
+    if (schema) {
+      return schema.parse(json);
+    }
+
+    return json as T;
   }
 
   if (schema) {
@@ -52,9 +56,29 @@ async function handleErrorResponse(res: Response, contentType: string, schema?: 
       return parsed.data;
     }
 
-    throw new HttpError(res.status, json?.message ?? "HTTP_ERROR");
+    if (json && typeof json === "object" && "error" in json) {
+      const err = json as { error?: { message?: string } | string };
+      const message = typeof err.error === "string" ? err.error : (err.error?.message ?? "HTTP_ERROR");
+
+      throw new HttpError(res.status, message);
+    }
+
+    throw new HttpError(res.status, extractClientErrorMessage(json));
   }
 
   const text = await res.text();
   throw new HttpError(res.status, text || "HTTP_ERROR");
+}
+
+function extractClientErrorMessage(json: unknown): string {
+  if (
+    typeof json === "object" &&
+    json !== null &&
+    "message" in json &&
+    typeof (json as Record<string, unknown>).message === "string"
+  ) {
+    return String((json as Record<string, unknown>).message);
+  }
+
+  return "HTTP_ERROR";
 }
